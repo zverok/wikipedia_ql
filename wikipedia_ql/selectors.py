@@ -39,7 +39,7 @@ class section:
                 else:
                     last = child
             else:
-                if isinstance(child, bs4.element.Tag) and child.name.startswith('h') and self.text in child.string:
+                if isinstance(child, bs4.element.Tag) and child.name.startswith('h') and self.text in child.get_text():
                     first = child
 
 class css:

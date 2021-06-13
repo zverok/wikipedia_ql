@@ -101,6 +101,13 @@ class Fragment:
     def _select(self, selector):
         return [self.slice(f, t) for f, t in selector(self)]
 
+    def query(self, selector, *selectors):
+        fragments = Fragments(self._select(selector))
+        if selectors:
+            return [fragments.query(*selectors)]
+        else:
+            return [f.text for f in fragments.items]
+
 class Fragments:
     def __init__(self, items):
         self.items = items
@@ -112,3 +119,11 @@ class Fragments:
             return fragments.select(*selectors)
         else:
             return fragments
+
+    def query(self, selector, *selectors):
+        fragments = Fragments([nested for item in self.items for nested in item._select(selector)])
+
+        if selectors:
+            return [fragments.query(*selectors)]
+        else:
+            return [f.text for f in fragments.items]

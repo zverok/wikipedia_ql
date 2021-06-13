@@ -11,8 +11,12 @@ from wikipedia_ql.selectors import *
 
 w = media_wiki.Wikipedia()
 
-page = w.get_page('Radiohead')
+# selected = w.get_page('Radiohead').select(css('.infobox'), all(css('.infobox-label'), css('.infobox-data > *')))
+# selected = w.get_page('The Beatles').select(section('Discography'), css('li a'))
 
-selected = page.select(css('.infobox'), all(css('.infobox-label'), css('.infobox-data > *')))
+# print([f.text for f in selected.items])
 
-print([f.text for f in selected.items])
+q = w.get_page('The Beatles').query(section('Discography'), css('li a'))
+print(q)
+
+# print(w.get_page('Bjork').soup.prettify())
