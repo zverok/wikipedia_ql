@@ -16,7 +16,7 @@ w = media_wiki.Wikipedia()
 
 # print([f.text for f in selected.items])
 
-q = w.get_page('The Beatles').query(section('Discography'), css('li a'))
+q = w.get_page('The Beatles').query(section('Discography').into('albums'), css('li a').into('title'))
 print(q)
 
 # print(w.get_page('Bjork').soup.prettify())

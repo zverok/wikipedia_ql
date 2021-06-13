@@ -1,14 +1,24 @@
 import re
 import bs4
 
-class text:
+class selector_base:
+    name: None
+
+    def into(self, name):
+        self.name = name
+        return self
+
+    def is_named(self):
+        return not self.name is None
+
+class text(selector_base):
     def __init__(self, re):
         self.re = re
 
     def __call__(self, page):
         yield from (m.span(0) for m in self.re.finditer(page.text))
 
-class sentence:
+class sentence(selector_base):
     def __init__(self, pattern):
         self.pattern = pattern
 
@@ -21,7 +31,7 @@ class sentence:
 
         yield from ((sent.start_char, sent.end_char) for sent in page.sentences if matches(sent.text))
 
-class section:
+class section(selector_base):
     # TODO: Level as an optional filter
     def __init__(self, text):
         self.text = text
@@ -42,16 +52,19 @@ class section:
                 if isinstance(child, bs4.element.Tag) and child.name.startswith('h') and self.text in child.get_text():
                     first = child
 
-class css:
-    def __init__(self, selector):
-        self.selector = selector
+class css(selector_base):
+    def __init__(self, css_selector):
+        self.css_selector = css_selector
 
     def __call__(self, page):
-        yield from ((node.textstart, node.textend) for node in page.soup.select(self.selector))
+        yield from ((node.textstart, node.textend) for node in page.soup.select(self.css_selector))
 
-class all:
+class all(selector_base):
     def __init__(self, *selectors):
         self.selectors = selectors
 
     def __call__(self, page):
         yield from (slice for selector in self.selectors for slice in selector(page))
+
+    def is_named(self):
+        return super().is_named() or any(sel.is_named() for sel in self.selectors)

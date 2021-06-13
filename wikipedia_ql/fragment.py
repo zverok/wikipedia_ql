@@ -103,10 +103,8 @@ class Fragment:
 
     def query(self, selector, *selectors):
         fragments = Fragments(self._select(selector))
-        if selectors:
-            return [fragments.query(*selectors)]
-        else:
-            return [f.text for f in fragments.items]
+
+        return query(fragments, selector, selectors)
 
 class Fragments:
     def __init__(self, items):
@@ -123,7 +121,16 @@ class Fragments:
     def query(self, selector, *selectors):
         fragments = Fragments([nested for item in self.items for nested in item._select(selector)])
 
+        return query(fragments, selector, selectors)
+
+def query(fragments, selector, selectors):
+    if selector.name:
         if selectors:
-            return [fragments.query(*selectors)]
+            return [{selector.name: fragment.query(*selectors)} for fragment in fragments.items]
         else:
-            return [f.text for f in fragments.items]
+            return [{selector.name: fragment.text} for fragment in fragments.items]
+    else:
+        if selectors:
+            return [fragment.query(*selectors)]
+        else:
+            return [fragment.text for fragment in fragments.items]
