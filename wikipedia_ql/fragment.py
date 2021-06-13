@@ -124,13 +124,14 @@ class Fragments:
         return query(fragments, selector, selectors)
 
 def query(fragments, selector, selectors):
+    # FIXME: strip is loose and demo-only!
     if selector.name:
         if selectors:
             return [{selector.name: fragment.query(*selectors)} for fragment in fragments.items]
         else:
-            return [{selector.name: fragment.text} for fragment in fragments.items]
+            return [{selector.name: fragment.text.strip()} for fragment in fragments.items]
     else:
         if selectors:
-            return [fragment.query(*selectors)]
+            return [fragment.query(*selectors) for fragment in fragments.items]
         else:
-            return [fragment.text for fragment in fragments.items]
+            return [fragment.text.strip() for fragment in fragments.items]
