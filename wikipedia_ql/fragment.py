@@ -67,7 +67,7 @@ class Fragment:
             if e < start or s > end:
                 return None
 
-            if s >= start and e < end:
+            if s >= start and e <= end:
                 return (copy.copy(node), text_tree)
 
             s1 = start - s if s < start else 0
@@ -75,6 +75,9 @@ class Fragment:
 
             new_s = s + s1
             new_e = e + e1 + 1 if e1 else e
+
+            if new_e and new_e <= new_s + 1: # empty
+                return None
 
             if isinstance(node, bs4.element.NavigableString):
                 text = str(node)[s1:e1]
@@ -95,15 +98,13 @@ class Fragment:
                 new_node = node_children[0]
                 tree_children = tree_children[0][2]
             else:
-                new_node = BeautifulSoup().new_tag('span', id=f"slice{new_s}_{new_e-1}")
+                new_node = BeautifulSoup().new_tag('span')
                 new_node.extend(node_children)
 
             return (new_node, (new_s, new_e, tree_children))
 
-        # print([self.text[start:end]])
         start += self.text_tree[0]
         end += self.text_tree[0]
-        # print([start, end], self.text_tree)
 
         res_node, res_tree = make_slice(self.soup, self.text_tree)
 
@@ -117,10 +118,10 @@ class Fragment:
             new_node.extend([copy.copy(tag) for tag in tags])
             return Fragment(new_node)
 
-    def select(self, selector, *selectors):
+    def select(self, selector):
         fragments = Fragments(self._select(selector))
-        if selectors:
-            return fragments.select(*selectors)
+        if selector.nested:
+            return fragments.select(selector.nested)
         else:
             return fragments
 
@@ -137,11 +138,11 @@ class Fragments:
     def __init__(self, items):
         self.items = items
 
-    def select(self, selector, *selectors):
+    def select(self, selector):
         fragments = Fragments([nested for item in self.items for nested in item._select(selector)])
 
-        if selectors:
-            return fragments.select(*selectors)
+        if selector.nested:
+            return fragments.select(selector.nested)
         else:
             return fragments
 
@@ -149,6 +150,9 @@ class Fragments:
         fragments = Fragments([nested for item in self.items for nested in item._select(selector)])
 
         return query(fragments, selector, selectors)
+
+    def __iter__(self):
+        return self.items.__iter__()
 
 def query(fragments, selector, selectors):
     # FIXME: strip is loose and demo-only!

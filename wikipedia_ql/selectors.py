@@ -2,8 +2,9 @@ import re
 import bs4
 
 class selector_base:
-    def __init__(self):
+    def __init__(self, nested=None):
         self.name = None
+        self.nested = nested
 
     def into(self, name):
         self.name = name
@@ -13,8 +14,8 @@ class selector_base:
         return not self.name is None
 
 class text(selector_base):
-    def __init__(self, text):
-        super().__init__()
+    def __init__(self, text, nested=None):
+        super().__init__(nested=nested)
         self.text = text
         self.re = re.compile(text)
 
@@ -25,8 +26,8 @@ class text(selector_base):
         return f"text[text=~{self.text!r}]"
 
 class sentence(selector_base):
-    def __init__(self, pattern):
-        super().__init__()
+    def __init__(self, pattern, nested=None):
+        super().__init__(nested=nested)
         self.pattern = pattern
 
     def __call__(self, page):
@@ -43,8 +44,8 @@ class sentence(selector_base):
 
 class section(selector_base):
     # TODO: Level as an optional filter; No filters at all (select all sections)
-    def __init__(self, text):
-        super().__init__()
+    def __init__(self, text, nested=None):
+        super().__init__(nested=nested)
         self.text = text
 
     def __call__(self, page):
@@ -64,16 +65,19 @@ class section(selector_base):
                     first = child
                     selected = [child]
 
+        if selected:
+            yield page.slice_tags(selected)
+
     def __repr__(self):
         return f"section[{self.text}]"
 
 class css(selector_base):
-    def __init__(self, css_selector):
-        super().__init__()
+    def __init__(self, css_selector, nested=None):
+        super().__init__(nested=nested)
         self.css_selector = css_selector
 
     def __call__(self, page):
-        yield from ((node.textstart, node.textend) for node in page.soup.select(self.css_selector))
+        yield from (page.slice_tags([node]) for node in page.soup.select(self.css_selector))
 
     def __repr__(self):
         return f"css[{self.css_selector}]"
