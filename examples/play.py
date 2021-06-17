@@ -31,7 +31,7 @@ print(wikipedia.query(r'''
     }
 '''))
 
-print(w.query(r'''
+print(wikipedia.query(r'''
     from "The Beatles" {
         section["Discography"] as "albums" {
             li { a as "title" }

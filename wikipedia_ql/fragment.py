@@ -2,7 +2,7 @@ import copy
 import re
 import json
 import bs4
-from spacy.lang.en import English
+# from spacy.lang.en import English
 from bs4 import BeautifulSoup
 
 class Fragment:
@@ -27,69 +27,95 @@ class Fragment:
 
         return cls(soup)
 
-    def __init__(self, soup):
+    def __init__(self, soup, text=None, text_tree=None):
         self.soup = soup
-        self.text = ''
-        def attach_to_text(node):
-            node.textstart = len(self.text)
 
+        def build_tree(node):
+            start = len(self.text)
             if isinstance(node, bs4.element.NavigableString):
                 self.text += str(node)
+                children = []
             else:
-                for child in node.children:
-                    attach_to_text(child)
+                children = [build_tree(child) for child in node.children]
                 if node.name in ['p', 'div', 'ul', 'ol', 'li', 'table', 'tbody', 'tr', 'br', 'h2', 'h3', 'h4', 'h5']:
                     self.text += "\n"
                 elif node.name in ['td', 'th']:
                     self.text += " "
                 else:
                     pass
-                    # print(node.name)
 
-            node.textend = len(self.text)
+            end = len(self.text)
 
-        for child in soup.children:
-            attach_to_text(child)
+            return (start, end, children)
 
-        nlp = English()
-        nlp.add_pipe(nlp.create_pipe("sentencizer"))
-        doc = nlp(self.text)
-        # FIXME: Newlines are ignored this way! Sentences include tables and hNs and whatnot
-        self.sentences = [*doc.sents]
+        if text is None:
+            self.text = ''
+            self.text_tree = build_tree(soup)
+        else:
+            self.text = text
+            self.text_tree = text_tree
+
+        # nlp = English()
+        # nlp.add_pipe(nlp.create_pipe("sentencizer"))
+        # doc = nlp(self.text)
+        # # FIXME: Newlines are ignored this way! Sentences include tables and hNs and whatnot
+        # self.sentences = [*doc.sents]
 
     def slice(self, start, end):
-        def filter_children(node):
+        def make_slice(node, text_tree):
+            s, e, children = text_tree
+            if e < start or s > end:
+                return None
+
+            if s >= start and e < end:
+                return (copy.copy(node), text_tree)
+
+            s1 = start - s if s < start else 0
+            e1 = end - e if e > end else None
+
+            new_s = s + s1
+            new_e = e + e1 + 1 if e1 else e
+
             if isinstance(node, bs4.element.NavigableString):
-                s = start - node.textstart if node.textstart < start else 0
-                e = end - node.textend if node.textend > end else -1
-                text = str(node)[s:e]
-                node.replace_with(text)
-                return
+                text = str(node)[s1:e1]
+                return (bs4.element.NavigableString(text), (new_s, new_e, []))
 
-            for child in [*node.children]:
-                if child.textend < start or child.textstart > end:
-                    child.extract()
-                elif child.textstart < start or child.textend > end:
-                    filter_children(child)
-                else:
-                    # Entirely inside the range
-                    pass
+            sliced_children = list(filter(
+                None,
+                [make_slice(child, tchild) for child, tchild in zip(node.children, children)]
+            ))
+            node_children = [n for n, t in sliced_children]
+            tree_children = [t for n, t in sliced_children]
 
-        def copy_pos(from_node, to_node):
-            to_node.textstart = from_node.textstart
-            to_node.textend = from_node.textend
+            if s > start or e < end:
+                new_node = copy.copy(node)
+                new_node.clear()
+                new_node.extend(node_children)
+            elif len(node_children) == 1:
+                new_node = node_children[0]
+                tree_children = tree_children[0][2]
+            else:
+                new_node = BeautifulSoup().new_tag('span', id=f"slice{new_s}_{new_e-1}")
+                new_node.extend(node_children)
 
-            if isinstance(to_node, bs4.element.Tag):
-                for from_c, to_c in zip(from_node.children, to_node.children):
-                    copy_pos(from_c, to_c)
+            return (new_node, (new_s, new_e, tree_children))
 
-        res = copy.copy(self.soup)
-        for from_child, to_child in zip(self.soup.children, res.children):
-            copy_pos(from_child, to_child)
+        # print([self.text[start:end]])
+        start += self.text_tree[0]
+        end += self.text_tree[0]
+        # print([start, end], self.text_tree)
 
-        filter_children(res)
+        res_node, res_tree = make_slice(self.soup, self.text_tree)
 
-        return Fragment(res)
+        return Fragment(res_node, self.text[start:end], res_tree)
+
+    def slice_tags(self, tags):
+        if len(tags) == 1:
+            return Fragment(tags[0])
+        else:
+            new_node = BeautifulSoup().new_tag('div')
+            new_node.extend([copy.copy(tag) for tag in tags])
+            return Fragment(new_node)
 
     def select(self, selector, *selectors):
         fragments = Fragments(self._select(selector))
@@ -99,7 +125,8 @@ class Fragment:
             return fragments
 
     def _select(self, selector):
-        return [self.slice(f, t) for f, t in selector(self)]
+        # return [self.slice(f, t) for f, t in selector(self)]
+        return [*selector(self)]
 
     def query(self, selector, *selectors):
         fragments = Fragments(self._select(selector))

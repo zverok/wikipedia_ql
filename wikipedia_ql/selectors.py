@@ -13,15 +13,16 @@ class selector_base:
         return not self.name is None
 
 class text(selector_base):
-    def __init__(self, re):
+    def __init__(self, text):
         super().__init__()
-        self.re = re
+        self.text = text
+        self.re = re.compile(text)
 
     def __call__(self, page):
-        yield from (m.span(0) for m in self.re.finditer(page.text))
+        yield from (page.slice(*m.span(0)) for m in self.re.finditer(page.text))
 
     def __repr__(self):
-        return f"text[{self.re}]"
+        return f"text[text=~{self.text!r}]"
 
 class sentence(selector_base):
     def __init__(self, pattern):
@@ -41,26 +42,27 @@ class sentence(selector_base):
         return f"sentence[{self.pattern}]"
 
 class section(selector_base):
-    # TODO: Level as an optional filter
+    # TODO: Level as an optional filter; No filters at all (select all sections)
     def __init__(self, text):
         super().__init__()
         self.text = text
 
     def __call__(self, page):
         first = None
-        last = None
+        selected = []
         # FIXME: Currently only yields non-intersecting ones
         for child in page.soup.children:
             if first:
                 if isinstance(child, bs4.element.Tag) and child.name.startswith('h') and child.name <= first.name:
-                    yield (first.textstart, last.textend)
+                    yield page.slice_tags(selected)
                     first = None
-                    last = None
+                    selected = []
                 else:
-                    last = child
+                    selected.append(child)
             else:
                 if isinstance(child, bs4.element.Tag) and child.name.startswith('h') and self.text in child.get_text():
                     first = child
+                    selected = [child]
 
     def __repr__(self):
         return f"section[{self.text}]"
