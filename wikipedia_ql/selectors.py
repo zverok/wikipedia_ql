@@ -82,16 +82,16 @@ class css(selector_base):
     def __repr__(self):
         return f"css[{self.css_selector}]"
 
-class all(selector_base):
-    def __init__(self, *selectors):
-        super().__init__()
+class alt(selector_base):
+    def __init__(self, *selectors, nested=None):
+        super().__init__(nested=nested)
         self.selectors = selectors
 
     def __call__(self, page):
-        yield from (slice for selector in self.selectors for slice in selector(page))
+        yield from (fragment for selector in self.selectors for fragment in selector(page))
 
     def is_named(self):
         return super().is_named() or any(sel.is_named() for sel in self.selectors)
 
     def __repr__(self):
-        return 'all(' + ';'.join(sel.__repr__() for sel in self.selectors) + ')'
+        return 'alt(' + ';'.join(sel.__repr__() for sel in self.selectors) + ')'

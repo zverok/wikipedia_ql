@@ -129,10 +129,10 @@ class Fragment:
         # return [self.slice(f, t) for f, t in selector(self)]
         return [*selector(self)]
 
-    def query(self, selector, *selectors):
+    def query(self, selector):
         fragments = Fragments(self._select(selector))
 
-        return query(fragments, selector, selectors)
+        return query(fragments, selector)
 
 class Fragments:
     def __init__(self, items):
@@ -146,23 +146,22 @@ class Fragments:
         else:
             return fragments
 
-    def query(self, selector, *selectors):
+    def query(self, selector):
         fragments = Fragments([nested for item in self.items for nested in item._select(selector)])
 
-        return query(fragments, selector, selectors)
+        return query(fragments, selector)
 
     def __iter__(self):
         return self.items.__iter__()
 
-def query(fragments, selector, selectors):
-    # FIXME: strip is loose and demo-only!
+def query(fragments, selector):
     if selector.name:
         if selectors:
             return [{selector.name: fragment.query(*selectors)} for fragment in fragments.items]
         else:
             return [{selector.name: fragment.text.strip()} for fragment in fragments.items]
     else:
-        if selectors:
-            return [fragment.query(*selectors) for fragment in fragments.items]
+        if selector.nested:
+            return [fragment.query(selector.nested) for fragment in fragments.items]
         else:
-            return [fragment.text.strip() for fragment in fragments.items]
+            return [fragment.text for fragment in fragments.items]

@@ -3,7 +3,7 @@ import re
 from bs4 import BeautifulSoup
 
 from wikipedia_ql.fragment import Fragment
-from wikipedia_ql.selectors import text, section, css
+from wikipedia_ql.selectors import text, section, css, alt
 
 def make_fragment(html):
     # Because fragment is Wikipedia-oriented and always looks for this div :shrug:
@@ -118,6 +118,20 @@ def test_select_nested():
     assert select(fragment, selector) \
         == ['<a class="first">Link1</a>', '<a class="second">Link2</a>']
 
-# TODO: nested
-# TODO: any
-# TODO: text-slice, wikitable, infobox, ...
+def test_select_alt():
+    def select(fragment, *selectors):
+        return apply(fragment, alt(*selectors), simplify=True)
+
+    fragment = make_fragment("""
+        <h2>Section1</h2>
+        <p>Text1</p>
+        <ul>
+            <li><a class="first">Link1</a></li>
+            <li class="item"><a class="second">Link2</a>text</li>
+        </ul>
+        """)
+
+    assert select(fragment, text('Link1'), css('a.second')) == \
+        ['<a class="first">Link1</a>', '<a class="second">Link2</a>']
+
+# TODO: (laterz!) text-slice, wikitable, infobox, ...
