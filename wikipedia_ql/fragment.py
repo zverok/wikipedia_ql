@@ -2,8 +2,9 @@ import copy
 import re
 import json
 import bs4
-# from spacy.lang.en import English
 from bs4 import BeautifulSoup
+import nltk
+import nltk.data
 
 import wikipedia_ql
 
@@ -62,6 +63,17 @@ class Fragment:
         # doc = nlp(self.text)
         # # FIXME: Newlines are ignored this way! Sentences include tables and hNs and whatnot
         # self.sentences = [*doc.sents]
+
+        sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
+        self.sentences = []
+        start = 0
+        for line in self.text.split("\n"):
+            for s, e in sent_detector.span_tokenize(line):
+                self.sentences.append((line[s:e], start + s, start +e))
+            start += len(line) + 1 # \n
+
+        # print(self.sentences)
+
 
     def slice(self, start, end):
         def make_slice(node, text_tree):

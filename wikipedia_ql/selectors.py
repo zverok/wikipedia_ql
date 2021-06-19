@@ -36,19 +36,14 @@ class text(selector_base):
 class sentence(selector_base):
     def __init__(self, pattern, nested=None):
         super().__init__(nested=nested)
-        self.pattern = pattern
+        self.pattern_text = pattern
+        self.pattern = re.compile(pattern)
 
     def __call__(self, page):
-        def matches(text):
-            if isinstance(self.pattern, re.Pattern):
-                return self.pattern.search(text)
-            elif isinstance(self.pattern, str):
-                return self.pattern in text
-
-        yield from ((sent.start_char, sent.end_char) for sent in page.sentences if matches(sent.text))
+        yield from (page.slice(start, end) for (text, start, end) in page.sentences if self.pattern.search(text))
 
     def repr_impl(self):
-        return f"sentence[{self.pattern}]"
+        return f"sentence[{self.pattern_text!r}]"
 
 class section(selector_base):
     # TODO: Level as an optional filter; No filters at all (select all sections)

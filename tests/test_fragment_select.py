@@ -3,7 +3,7 @@ import re
 from bs4 import BeautifulSoup
 
 from wikipedia_ql.fragment import Fragment
-from wikipedia_ql.selectors import text, section, css, alt
+from wikipedia_ql.selectors import text, sentence, section, css, alt
 
 def make_fragment(html):
     # Because fragment is Wikipedia-oriented and always looks for this div :shrug:
@@ -99,7 +99,20 @@ def test_select_css():
         """)
     ]
 
-# TODO: sentence
+def test_select_sentence():
+    def select(fragment, pattern):
+        return apply(fragment, sentence(pattern))
+
+    fragment = make_fragment(
+        """
+        <p>This is <b>sentence</b> one. This is phrase <a href="foo">two.</a> This is NOT</p>
+        <p>sentence three, probably!</p>
+        """
+    )
+
+    assert select(fragment, 'one') == ['<span>This is <b>sentence</b> one.</span>']
+    assert select(fragment, 'This.+two') == ['<span>This is phrase <a href="foo">two.</a></span>']
+    assert select(fragment, 'This.+three') == []
 
 def test_select_nested():
     def select(fragment, selector):

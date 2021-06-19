@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from wikipedia_ql.selectors import text, section, css, alt
+from wikipedia_ql.selectors import text, sentence, section, css, alt
 
 def test_repr():
     assert text('.{4,10}').__repr__() == "text['.{4,10}']"
     assert section(heading='Section 1').__repr__() == "section[heading='Section 1']"
     assert css("li.foo").__repr__() == "css['li.foo']"
+    assert sentence(r'This.*cool\.').__repr__() == r"sentence['This.*cool\\.']"
 
     assert alt(text('.{4,10}'), section(heading='Section 1')).__repr__() == \
         "text['.{4,10}'];section[heading='Section 1']"
