@@ -30,7 +30,8 @@ class Fragment:
 
         return cls(soup)
 
-    def __init__(self, soup, text=None, text_tree=None):
+    def __init__(self, soup, text=None, text_tree=None, *, context=None):
+        self.context = context or {}
         self.soup = soup
 
         def build_tree(node):
@@ -75,7 +76,7 @@ class Fragment:
         # print(self.sentences)
 
 
-    def slice(self, start, end):
+    def slice(self, start, end, *, context=None):
         def make_slice(node, text_tree):
             s, e, children = text_tree
             if e < start or s > end:
@@ -122,7 +123,7 @@ class Fragment:
 
         res_node, res_tree = make_slice(self.soup, self.text_tree)
 
-        return Fragment(res_node, self.text[start:end], res_tree)
+        return Fragment(res_node, self.text[start:end], res_tree, context=context)
 
     def slice_tags(self, tags):
         if len(tags) == 1:

@@ -28,10 +28,30 @@ class text(selector_base):
         self.re = re.compile(text)
 
     def __call__(self, page):
-        yield from (page.slice(*m.span(0)) for m in self.re.finditer(page.text))
+        yield from (page.slice(*m.span(0), context={'text': m}) for m in self.re.finditer(page.text))
 
     def repr_impl(self):
         return f"text[{self.text!r}]"
+
+class text_slice(selector_base):
+    def __init__(self, span_id, nested=None):
+        super().__init__(nested=nested)
+        self.span_id = span_id
+
+    def __call__(self, page):
+        if not 'text' in page.context:
+            raise ValueError('text-slice is only allowed after text')
+
+        match = page.context['text']
+
+        if len(match.groups()) < self.span_id:
+            return
+
+        s, e = match.span(self.span_id)
+        yield page.slice(s - match.start(), e - match.start())
+
+    def repr_impl(self):
+        return f"text-slice[{self.span_id!r}]"
 
 class sentence(selector_base):
     def __init__(self, pattern, nested=None):

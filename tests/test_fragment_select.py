@@ -1,9 +1,10 @@
 import re
+import pytest
 
 from bs4 import BeautifulSoup
 
 from wikipedia_ql.fragment import Fragment
-from wikipedia_ql.selectors import text, sentence, section, css, alt
+from wikipedia_ql.selectors import text, text_slice, sentence, section, css, alt
 
 def make_fragment(html):
     # Because fragment is Wikipedia-oriented and always looks for this div :shrug:
@@ -146,5 +147,26 @@ def test_select_alt():
 
     assert select(fragment, text('Link1'), css('a.second')) == \
         ['<a class="first">Link1</a>', '<a class="second">Link2</a>']
+
+def test_select_text_slice():
+    def select(fragment, id):
+        return apply(fragment, text_slice(id))
+
+    fragment = make_fragment(
+        '<p>Some paragraph with <b>empasis</b> and <a href="#foo">link</a></p>'
+    )
+
+    assert select(fragment.select(text(r'with (\S+ and) li(.*)')), 1) == [
+        '<span><b>empasis</b> and</span>'
+    ]
+
+    # When not after text
+    with pytest.raises(ValueError, match='text-slice is only allowed after text'):
+        select(fragment, 1)
+
+    # When slice index is out of range
+    assert select(fragment.select(text(r'with (\S+ and) li(.*)')), 10) == []
+
+    # TODO: named groups
 
 # TODO: (laterz!) text-slice, wikitable, infobox, ...
