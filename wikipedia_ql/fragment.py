@@ -157,7 +157,7 @@ class Fragments:
 # FIXME: Base class queriable?..
 def query(subject, selector):
     if isinstance(selector, wikipedia_ql.selectors.alt):
-        return [subject.query(sel) for sel in selector.selectors]
+        return flatten([subject.query(sel) for sel in selector.selectors])
 
     fragments = Fragments(subject._select(selector))
 
@@ -168,6 +168,9 @@ def query(subject, selector):
             return [{selector.name: fragment.text} for fragment in fragments.items]
     else:
         if selector.nested:
-            return [fragment.query(selector.nested) for fragment in fragments.items]
+            return flatten([fragment.query(selector.nested) for fragment in fragments.items])
         else:
             return [fragment.text for fragment in fragments.items]
+
+def flatten(items):
+    return [subitem for item in items for subitem in (flatten(item) if isinstance(item, list) else [item])]
