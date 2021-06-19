@@ -93,5 +93,8 @@ class alt(selector_base):
     def is_named(self):
         return super().is_named() or any(sel.is_named() for sel in self.selectors)
 
+    def into(self, name):
+        raise RuntimeError("alt selector can't be named")
+
     def __repr__(self):
         return 'alt(' + ';'.join(sel.__repr__() for sel in self.selectors) + ')'

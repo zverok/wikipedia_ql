@@ -5,6 +5,8 @@ import bs4
 # from spacy.lang.en import English
 from bs4 import BeautifulSoup
 
+import wikipedia_ql
+
 class Fragment:
     REMOVE = [
         '#toc',
@@ -126,13 +128,10 @@ class Fragment:
             return fragments
 
     def _select(self, selector):
-        # return [self.slice(f, t) for f, t in selector(self)]
         return [*selector(self)]
 
     def query(self, selector):
-        fragments = Fragments(self._select(selector))
-
-        return query(fragments, selector)
+        return query(self, selector)
 
 class Fragments:
     def __init__(self, items):
@@ -147,19 +146,26 @@ class Fragments:
             return fragments
 
     def query(self, selector):
-        fragments = Fragments([nested for item in self.items for nested in item._select(selector)])
+        return query(self, selector)
 
-        return query(fragments, selector)
+    def _select(self, selector):
+        return [nested for item in self.items for nested in item._select(selector)]
 
     def __iter__(self):
         return self.items.__iter__()
 
-def query(fragments, selector):
+# FIXME: Base class queriable?..
+def query(subject, selector):
+    if isinstance(selector, wikipedia_ql.selectors.alt):
+        return [subject.query(sel) for sel in selector.selectors]
+
+    fragments = Fragments(subject._select(selector))
+
     if selector.name:
-        if selectors:
-            return [{selector.name: fragment.query(*selectors)} for fragment in fragments.items]
+        if selector.nested:
+            return [{selector.name: fragment.query(selector.nested)} for fragment in fragments.items]
         else:
-            return [{selector.name: fragment.text.strip()} for fragment in fragments.items]
+            return [{selector.name: fragment.text} for fragment in fragments.items]
     else:
         if selector.nested:
             return [fragment.query(selector.nested) for fragment in fragments.items]
