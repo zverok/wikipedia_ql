@@ -44,7 +44,7 @@ def test_select_section():
         <p>Text5</p>
         """)
 
-    assert select(fragment, text='Section1') == [
+    assert select(fragment, heading='Section1') == [
         h("""
         <div>
             <h2>Section1</h2>
@@ -57,7 +57,7 @@ def test_select_section():
         """)
     ]
 
-    assert select(fragment, text='Section1.1') == [
+    assert select(fragment, heading='Section1.1') == [
         h("""
         <div>
             <h3>Section1.1</h3>
@@ -66,7 +66,7 @@ def test_select_section():
         """)
     ]
 
-    assert select(fragment, text='Section2') == [
+    assert select(fragment, heading='Section2') == [
         h("""
         <div>
         <h2>Section2</h2>

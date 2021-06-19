@@ -37,6 +37,7 @@ def test_fragment_query_named(fragment):
     assert fragment.query(alt(css('a.second').into('a'), text('Fi.{3}').into('b'))) == \
         [{'a': 'Second'}, {'b': 'First'}]
 
+    # section[heading=Section1] as "section" > ul as "list" > a as "link"
     assert fragment.query(
         section('Section1', nested=css('ul', nested=css('a').into('link')).into('list')).into('section')
     ) == [{'section': [{'list': [{'link': 'First'}, {'link': 'Second'}]}]}]

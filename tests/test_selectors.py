@@ -1,17 +1,26 @@
 from dataclasses import dataclass
-from wikipedia_ql.selectors import text
+from wikipedia_ql.selectors import text, section, css, alt
 
-@dataclass
-class FakeFragment:
-    text: str
-    soup = None
+def test_repr():
+    assert text('.{4,10}').__repr__() == "text['.{4,10}']"
+    assert section(heading='Section 1').__repr__() == "section[heading='Section 1']"
+    assert css("li.foo").__repr__() == "css['li.foo']"
 
-def test_text():
-    def check(pattern, source):
-        selector = text(text=pattern)
-        return [*selector(FakeFragment(text=source))]
+    assert alt(text('.{4,10}'), section(heading='Section 1')).__repr__() == \
+        "text['.{4,10}'];section[heading='Section 1']"
 
-    assert check("1.*3", "0123456") == [(1, 4)]
+    assert text('.{4,10}').into("x").__repr__() == "text['.{4,10}'] as 'x'"
 
 
-    assert text(".{4,10").__repr__() == "text[text=~'.{4,10']"
+    assert section(heading='Section 1',
+        nested=css("li.foo",
+            nested=text('.{4,10}')
+        )
+    ).__repr__() == "section[heading='Section 1'] { css['li.foo'] { text['.{4,10}'] } }"
+
+    assert section(heading='Section 1',
+        nested=css("li.foo",
+            nested=text('.{4,10}').into("txt")
+        ).into("item")
+    ).into('section').__repr__() == \
+        "section[heading='Section 1'] as 'section' { css['li.foo'] as 'item' { text['.{4,10}'] as 'txt' } }"
