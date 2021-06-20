@@ -23,25 +23,29 @@ def fragment():
         """)
 
 def test_fragment_query_simple(fragment):
-    assert fragment.query(text('Fi.{3}')) == ['First']
+    assert fragment.query(text(pattern='Fi.{3}')) == ['First']
 
 def test_fragment_query_alt(fragment):
-    assert fragment.query(alt(css('a.second'), text('Fi.{3}'))) == ['Second', 'First']
+    assert fragment.query(alt(css(css_selector='a.second'), text(pattern='Fi.{3}'))) == ['Second', 'First']
 
 def test_fragment_query_nested(fragment):
-    assert fragment.query(section('Section2', nested=css('b', nested=text(r'Text\d')))) == ['Text2']
+    assert fragment.query(
+        section(heading='Section2',
+            nested=css(css_selector='b', nested=text(pattern=r'Text\d'))
+        )
+    ) == ['Text2']
 
 def test_fragment_query_named(fragment):
-    assert fragment.query(text('Fi.{3}').into('f')) == [{'f': 'First'}]
+    assert fragment.query(text(pattern='Fi.{3}').into('f')) == [{'f': 'First'}]
 
-    assert fragment.query(alt(css('a.second').into('a'), text('Fi.{3}').into('b'))) == \
+    assert fragment.query(alt(css(css_selector='a.second').into('a'), text(pattern='Fi.{3}').into('b'))) == \
         [{'a': 'Second'}, {'b': 'First'}]
 
     # section[heading=Section1] as "section" > ul as "list" > a as "link"
     assert fragment.query(
-        section('Section1', nested=css('ul', nested=css('a').into('link')).into('list')).into('section')
+        section(heading='Section1', nested=css(css_selector='ul', nested=css(css_selector='a').into('link')).into('list')).into('section')
     ) == [{'section': [{'list': [{'link': 'First'}, {'link': 'Second'}]}]}]
 
     assert fragment.query(
-        section('Section1', nested=css('ul', nested=css('a'))).into('section')
+        section(heading='Section1', nested=css(css_selector='ul', nested=css(css_selector='a'))).into('section')
     ) == [{'section': ['First', 'Second']}]

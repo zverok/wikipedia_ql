@@ -1,42 +1,41 @@
 import re
 import bs4
 
+from dataclasses import dataclass, field
+from typing import Any, Union, Dict, Optional
+
+@dataclass
 class selector_base:
-    def __init__(self, nested=None):
-        self.name = None
+    attrs: Dict = field(default_factory=dict)
+    name: Optional[str] = None
+    nested: Optional[Union['selector_base', 'alt']] = None
+
+    def __init__(self, *, nested=None, **attrs):
         self.nested = nested
+        self.name = None
+        self.attrs = attrs
 
     def into(self, name):
         self.name = name
         return self
 
-    def is_named(self):
-        return not self.name is None
-
     def __repr__(self):
-        res = self.repr_impl()
-        if self.name:
-            res += f" as {self.name!r}"
-        if self.nested:
-            res += f" {{ {self.nested!r} }}"
-        return res
+        return type(self).__name__ + ''.join(f'[{name}={value!r}]' for name, value in self.attrs.items()) + \
+            (f' as {self.name!r}' if self.name else '') + \
+            (f' {{ {self.nested!r} }}' if self.nested else '')
 
 class text(selector_base):
-    def __init__(self, text, nested=None):
-        super().__init__(nested=nested)
-        self.text = text
-        self.re = re.compile(text)
+    @property
+    def re(self):
+        return re.compile(self.attrs['pattern'])
 
     def __call__(self, page):
         yield from (page.slice(*m.span(0), context={'text': m}) for m in self.re.finditer(page.text))
 
-    def repr_impl(self):
-        return f"text[{self.text!r}]"
-
 class text_slice(selector_base):
-    def __init__(self, span_id, nested=None):
-        super().__init__(nested=nested)
-        self.span_id = span_id
+    @property
+    def group_id(self):
+        return self.attrs['group_id']
 
     def __call__(self, page):
         if not 'text' in page.context:
@@ -44,33 +43,26 @@ class text_slice(selector_base):
 
         match = page.context['text']
 
-        if len(match.groups()) < self.span_id:
+        if len(match.groups()) < self.group_id:
             return
 
-        s, e = match.span(self.span_id)
+        s, e = match.span(self.group_id)
         yield page.slice(s - match.start(), e - match.start())
 
-    def repr_impl(self):
-        return f"text-slice[{self.span_id!r}]"
-
 class sentence(selector_base):
-    def __init__(self, pattern, nested=None):
-        super().__init__(nested=nested)
-        self.pattern_text = pattern
-        self.pattern = re.compile(pattern)
+    @property
+    def re(self):
+        return re.compile(self.attrs['pattern'])
 
     def __call__(self, page):
-        yield from (page.slice(start, end) for (text, start, end) in page.sentences if self.pattern.search(text))
-
-    def repr_impl(self):
-        return f"sentence[{self.pattern_text!r}]"
+        yield from (page.slice(start, end) for (text, start, end) in page.sentences if self.re.search(text))
 
 class section(selector_base):
-    # TODO: Level as an optional filter; No filters at all (select all sections)
-    def __init__(self, heading, nested=None):
-        super().__init__(nested=nested)
-        self.heading = heading
+    @property
+    def heading(self):
+        return self.attrs['heading']
 
+    # TODO: Level as an optional filter; No filters at all (select all sections)
     def __call__(self, page):
         first = None
         selected = []
@@ -91,33 +83,20 @@ class section(selector_base):
         if selected:
             yield page.slice_tags(selected)
 
-    def repr_impl(self):
-        return f"section[heading={self.heading!r}]"
-
 class css(selector_base):
-    def __init__(self, css_selector, nested=None):
-        super().__init__(nested=nested)
-        self.css_selector = css_selector
+    @property
+    def css_selector(self):
+        return self.attrs['css_selector']
 
     def __call__(self, page):
         yield from (page.slice_tags([node]) for node in page.soup.select(self.css_selector))
 
-    def repr_impl(self):
-        return f"css[{self.css_selector!r}]"
-
-class alt(selector_base):
-    def __init__(self, *selectors, nested=None):
-        super().__init__(nested=nested)
+class alt:
+    def __init__(self, *selectors):
         self.selectors = selectors
 
     def __call__(self, page):
         yield from (fragment for selector in self.selectors for fragment in selector(page))
 
-    def is_named(self):
-        return super().is_named() or any(sel.is_named() for sel in self.selectors)
-
-    def into(self, name):
-        raise RuntimeError("alt selector can't be named")
-
-    def repr_impl(self):
-        return ';'.join(sel.repr_impl() for sel in self.selectors)
+    def __repr__(self):
+        return '; '.join(sel.__repr__() for sel in self.selectors)

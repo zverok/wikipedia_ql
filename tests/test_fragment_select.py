@@ -21,7 +21,7 @@ def apply(fragment, selector, simplify=False):
 
 def test_select_text():
     def select(html, selector):
-        return apply(make_fragment(html), text(selector))
+        return apply(make_fragment(html), text(pattern=selector))
 
     assert select("""
             <h2>Header</h2>
@@ -83,7 +83,7 @@ def test_select_section():
 
 def test_select_css():
     def select(fragment, css_selector):
-        return apply(fragment, css(css_selector), simplify=True)
+        return apply(fragment, css(css_selector=css_selector), simplify=True)
 
     fragment = make_fragment("""
         <h2>Section1</h2>
@@ -102,7 +102,7 @@ def test_select_css():
 
 def test_select_sentence():
     def select(fragment, pattern):
-        return apply(fragment, sentence(pattern))
+        return apply(fragment, sentence(pattern=pattern))
 
     fragment = make_fragment(
         """
@@ -128,7 +128,7 @@ def test_select_nested():
         </ul>
         """)
 
-    selector = section('Section1', nested=css('ul', nested=text('Li...')))
+    selector = section(heading='Section1', nested=css(css_selector='ul', nested=text(pattern='Li...')))
     assert select(fragment, selector) \
         == ['<a class="first">Link1</a>', '<a class="second">Link2</a>']
 
@@ -145,18 +145,18 @@ def test_select_alt():
         </ul>
         """)
 
-    assert select(fragment, text('Link1'), css('a.second')) == \
+    assert select(fragment, text(pattern='Link1'), css(css_selector='a.second')) == \
         ['<a class="first">Link1</a>', '<a class="second">Link2</a>']
 
 def test_select_text_slice():
     def select(fragment, id):
-        return apply(fragment, text_slice(id))
+        return apply(fragment, text_slice(group_id=id))
 
     fragment = make_fragment(
         '<p>Some paragraph with <b>empasis</b> and <a href="#foo">link</a></p>'
     )
 
-    assert select(fragment.select(text(r'with (\S+ and) li(.*)')), 1) == [
+    assert select(fragment.select(text(pattern=r'with (\S+ and) li(.*)')), 1) == [
         '<span><b>empasis</b> and</span>'
     ]
 
@@ -165,7 +165,7 @@ def test_select_text_slice():
         select(fragment, 1)
 
     # When slice index is out of range
-    assert select(fragment.select(text(r'with (\S+ and) li(.*)')), 10) == []
+    assert select(fragment.select(text(pattern=r'with (\S+ and) li(.*)')), 10) == []
 
     # TODO: named groups
 
