@@ -2,7 +2,7 @@ import re
 import bs4
 
 from dataclasses import dataclass, field
-from typing import Any, Union, Dict, Optional
+from typing import Any, Union, Dict, List, Optional
 
 @dataclass
 class selector_base:
@@ -13,7 +13,7 @@ class selector_base:
     def __init__(self, *, nested=None, **attrs):
         self.nested = nested
         self.name = None
-        self.attrs = attrs
+        self.attrs = {key: val for key, val in attrs.items() if val != None}
 
     def into(self, name):
         self.name = name
@@ -91,7 +91,10 @@ class css(selector_base):
     def __call__(self, page):
         yield from (page.slice_tags([node]) for node in page.soup.select(self.css_selector))
 
+@dataclass
 class alt:
+    selectors: List[Union['selector_base', 'alt']]
+
     def __init__(self, *selectors):
         self.selectors = selectors
 

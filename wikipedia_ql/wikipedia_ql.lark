@@ -2,28 +2,36 @@ query: "from"i _S* source _S* nested_selectors
 
 source: STRING
 
-// TODO: Selector-sequence: foo bar? Or simplify to foo >> bar
+// TODO: Selector-sequence: foo >> bar, foo > bar
 
-nested_selectors: "{" _SM* selectors _SM* "}"
+nested_selectors: ("{" _SM* selectors _SM* "}" | _SM* ">>" _SM* selector )
 
 ?selectors: selector _S* (";" _SM* selector)*
 selector: _selector_expression as_named? _S* nested_selectors?
 
+// TODO: and/or type
 as_named: _S+ "as"i _S+ STRING
 
-_selector_expression: css_selector | text_selector | sentence_selector | section_selector
+_selector_expression: text_selector
+                      | sentence_selector
+                      | section_selector
+                      | text_slice_selector
+                      | css_selector
 
-text_selector: "text" ("[" _S* (STRING | REGEX) _S* "]")?
-sentence_selector: "sentence" ("[" _S* (STRING | REGEX) _S* "]")?
+text_selector: "text" "[" _S* STRING _S* "]"
+sentence_selector: "sentence" ("[" _S* STRING _S* "]")?
 
-section_selector: "section" ("[" _S* (STRING | REGEX) _S* "]" | "[" _S* "level" _S* "=" _S* INT _S* "]")*
+section_selector: "section" ( attrib )*
+text_slice_selector: "text-slice" "[" _S* ( STRING | NUMBER ) _S* "]"
 
 // https://www.w3.org/TR/CSS21/grammar.html
 css_selector: element_name (HASH | class | attrib | pseudo)* | (HASH | class | attrib | pseudo)+
 element_name: IDENT | "*"
 class: "." IDENT
-attrib: "[" _S* IDENT _S* ( ( "=" | INCLUDES | DASHMATCH ) _S* ( IDENT | STRING ) _S* )? "]"
+attrib: "[" _S* IDENT _S* ( ATTR_OP _S* ( IDENT | STRING ) _S* )? "]"
 pseudo: ":" IDENT // ("(" _S* [IDENT _S*]? ")")? -- FIXME: Lark goes crazy on it...
+
+ATTR_OP: "=" | INCLUDES | DASHMATCH
 
 FUNCTION: IDENT "("
 INCLUDES: "~="
@@ -37,13 +45,14 @@ ESCAPE:    UNICODE | /\\[^\r\n\f0-9a-f]/
 NMSTART:   /[_a-z]/ | NONASCII | ESCAPE
 NMCHAR:    /[_a-z0-9-]/ | NONASCII | ESCAPE
 
+NUMBER: /[0-9]+/
+
 _S: (" "|/\t/)+
 _SM: /[ \t\f\r\n]/+
-
-REGEX: "/" /([^\/]|\\\/)+/ "/" "i"?
 
 %import common.ESCAPED_STRING -> STRING
 %import common.INT
 
+// FIXME: Doesn't work somehow :(
 %ignore _S
 %ignore _SM
