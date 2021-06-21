@@ -35,6 +35,10 @@ def test_fragment_query_nested(fragment):
         )
     ) == ['Text2']
 
+    assert fragment.query(
+        text(pattern='Second text', nested=text(pattern='t.{3}'))
+    ) == ['text']
+
 def test_fragment_query_named(fragment):
     assert fragment.query(text(pattern='Fi.{3}').into('f')) == [{'f': 'First'}]
 

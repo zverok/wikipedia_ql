@@ -12,11 +12,14 @@ class Parser:
             propagate_positions=True
         )
 
+    def parse(self, source):
+        tree = self.lark.parse(source, start="query")
+        tree = ValueTransformer().transform(tree)
+        return Interpreter(source).visit(tree)
+
     def parse_selector(self, source):
         tree = self.lark.parse(source, start="selector")
-        # print(tree)
         tree = ValueTransformer().transform(tree)
-        # print(tree)
         return Interpreter(source).visit(tree)
 
 class ValueTransformer(lark.visitors.Transformer):
@@ -24,7 +27,7 @@ class ValueTransformer(lark.visitors.Transformer):
         return val[1:-1]
 
     def NUMBER(self, children):
-        return str(children[0])
+        return int(children[0])
 
     def IDENT(self, val):
         return str(val)
@@ -39,10 +42,8 @@ class Interpreter(lark.visitors.Interpreter):
 
         self.source = source
 
-    # def query(self, tree):
-    #     self.page = eval(tree.children[0].children[0])
-
-    #     self.selectors_list = self.visit(tree.children[1])
+    def query(self, tree):
+        return (tree.children[0].children[0], self.visit(tree.children[1]))
 
     def nested_selectors(self, tree):
         return self.visit(tree.children[0])
@@ -53,7 +54,7 @@ class Interpreter(lark.visitors.Interpreter):
         into = None
         if len(tree.children) > 1:
             if tree.children[1].data == 'as_named':
-                into = eval(tree.children[1].children[0])
+                into = tree.children[1].children[0]
                 if len(tree.children) > 2:
                     nested = self.visit(tree.children[2])
             else:
@@ -86,6 +87,5 @@ class Interpreter(lark.visitors.Interpreter):
         return s.text_slice(group_id=tree.children[0])
 
     def css_selector(self, tree):
-        print(tree.pretty())
         source = self.source[tree.meta.start_pos:tree.meta.end_pos]
         return s.css(css_selector=source)

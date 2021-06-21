@@ -118,12 +118,13 @@ class Fragment:
 
             return (new_node, (new_s, new_e, tree_children))
 
+        tstart, tend = start, end
         start += self.text_tree[0]
         end += self.text_tree[0]
 
         res_node, res_tree = make_slice(self.soup, self.text_tree)
 
-        return Fragment(res_node, self.text[start:end], res_tree, context=context)
+        return Fragment(res_node, self.text[tstart:tend], res_tree, context=context)
 
     def slice_tags(self, tags):
         if len(tags) == 1:

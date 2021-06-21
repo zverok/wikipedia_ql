@@ -6,7 +6,7 @@ source: STRING
 
 nested_selectors: ("{" _SM* selectors _SM* "}" | _SM* ">>" _SM* selector )
 
-?selectors: selector _S* (";" _SM* selector)*
+?selectors: selector _S* (";" _SM* selector)* ";" ?
 selector: _selector_expression as_named? _S* nested_selectors?
 
 // TODO: and/or type

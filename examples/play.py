@@ -21,20 +21,37 @@ wikipedia = media_wiki.Wikipedia()
 
 # print(w.get_page('Bjork').soup.prettify())
 
+# print(wikipedia.query(r'''
+#     from "Nomadland (film)" {
+#         section[heading="Critical response"] {
+#             sentence["Rotten Tomatoes"] {
+#                 text["\d+%"] as "percent";
+#                 text["(\d+) (critics|reviews)"] >> text-slice[1] as "critics";
+#                 text["[\d.]+/10"] as "overall"
+#             };
+#             text["consensus .+? \""(.+?)\""] as "consensus"
+#         }
+#     }
+# '''))
+
 print(wikipedia.query(r'''
     from "Nomadland (film)" {
-        section["Critical response"] {
+        section[heading="Critical response"] {
             sentence["Rotten Tomatoes"] {
-                text[/\d+%/] as "percent"
+                text["\d+%"] as "percent";
+                text["(\d+) (critic|review)"] >> text-slice[1] as "reviews";
+                text["[\d.]+/10"] as "overall"
             }
         }
     }
 '''))
 
-print(wikipedia.query(r'''
-    from "The Beatles" {
-        section["Discography"] as "albums" {
-            li { a as "title" }
-        }
-    }
-'''))
+
+
+# print(wikipedia.query(r'''
+#     from "The Beatles" {
+#         section["Discography"] as "albums" {
+#             li { a as "title" }
+#         }
+#     }
+# '''))
