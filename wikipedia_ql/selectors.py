@@ -9,9 +9,13 @@ class selector_base:
     attrs: Dict = field(default_factory=dict)
     name: Optional[str] = None
     nested: Optional[Union['selector_base', 'alt']] = None
+    attribute: Optional[str] = None
 
-    def __init__(self, *, nested=None, **attrs):
+    def __init__(self, *, nested=None, attribute=None, **attrs):
+        # TODO: nested & attribute are mutually exclusive
         self.nested = nested
+        self.attribute = attribute
+
         self.name = None
         self.attrs = {key: val for key, val in attrs.items() if val != None}
 
@@ -21,6 +25,7 @@ class selector_base:
 
     def __repr__(self):
         return type(self).__name__ + ''.join(f'[{name}={value!r}]' for name, value in self.attrs.items()) + \
+            (f'@{self.attribute}' if self.attribute else '') + \
             (f' as {self.name!r}' if self.name else '') + \
             (f' {{ {self.nested!r} }}' if self.nested else '')
 

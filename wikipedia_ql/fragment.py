@@ -147,6 +147,11 @@ class Fragment:
     def query(self, selector):
         return query(self, selector)
 
+    def attribute(self, name):
+        # TODO:
+        # * available attr depends on fragment's type
+        return self.soup[name]
+
 class Fragments:
     def __init__(self, items):
         self.items = items
@@ -179,12 +184,18 @@ def query(subject, selector):
         if selector.nested:
             return [{selector.name: fragment.query(selector.nested)} for fragment in fragments.items]
         else:
-            return [{selector.name: fragment.text} for fragment in fragments.items]
+            return [{selector.name: query_value(fragment, selector)} for fragment in fragments.items]
     else:
         if selector.nested:
             return flatten([fragment.query(selector.nested) for fragment in fragments.items])
         else:
-            return [fragment.text for fragment in fragments.items]
+            return [query_value(fragment, selector) for fragment in fragments.items]
+
+def query_value(fragment, selector):
+    if selector.attribute:
+        return fragment.attribute(selector.attribute)
+    else:
+        return fragment.text
 
 def flatten(items):
     return [subitem for item in items for subitem in (flatten(item) if isinstance(item, list) else [item])]

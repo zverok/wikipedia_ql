@@ -53,8 +53,15 @@ print(wikipedia.query(r'''
         section[heading="Discography"] as "albums" {
             li {
                 a as "title";
-                text["\((.+?)\)"] >> text-slice[1] as "date"
+                text["\((.+?)\)"] >> text-slice[1] as "date";
+                a@href as "link"
             }
         }
+    }
+'''))
+
+print(wikipedia.query(r'''
+    from "Bear" {
+        section[heading="Feeding"] >> img@src as "image"
     }
 '''))

@@ -52,18 +52,24 @@ class Interpreter(lark.visitors.Interpreter):
         sel = self.visit(tree.children[0])
         nested = []
         into = None
+        attribute = None
         if len(tree.children) > 1:
-            if tree.children[1].data == 'as_named':
-                into = tree.children[1].children[0]
-                if len(tree.children) > 2:
-                    nested = self.visit(tree.children[2])
-            else:
-                nested = self.visit(tree.children[1])
+            for child in tree.children[1:]:
+                if child.data == 'as_named':
+                    into = child.children[0]
+                elif child.data == 'nested_selectors':
+                    nested = self.visit(child)
+                elif child.data == 'attribute_selector':
+                    attribute = child.children[0]
+                else:
+                    raise ValueError(f'Unidentified selector child: {child.data!r}')
 
         if into:
             sel.into(into)
         if nested:
             sel.nested = nested
+        if attribute:
+            sel.attribute = attribute
 
         return sel
 

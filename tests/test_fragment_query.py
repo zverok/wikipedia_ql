@@ -16,7 +16,7 @@ def fragment():
         <p><b>Text1</b></p>
         <ul>
             <li><a class="first">First</a></li>
-            <li class="item"><a class="second">Second</a> text</li>
+            <li class="item"><a class="second" href="http://google.com">Second</a> text</li>
         </ul>
         <h2>Section2</h2>
         <p><b>Text2</b> Text3</p>
@@ -53,3 +53,7 @@ def test_fragment_query_named(fragment):
     assert fragment.query(
         section(heading='Section1', nested=css(css_selector='ul', nested=css(css_selector='a'))).into('section')
     ) == [{'section': ['First', 'Second']}]
+
+def test_fragment_query_attr(fragment):
+    assert fragment.query(css(css_selector='a.second', attribute='href')) == ['http://google.com']
+    assert fragment.query(css(css_selector='a.second', attribute='href').into('foo')) == [{'foo': 'http://google.com'}]

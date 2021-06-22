@@ -7,7 +7,7 @@ source: STRING
 nested_selectors: ("{" _SM* selectors _SM* "}" | _SM* ">>" _SM* selector )
 
 ?selectors: selector _S* (";" _SM* selector)* ";" ?
-selector: _selector_expression as_named? _S* nested_selectors?
+selector: _selector_expression attribute_selector? as_named? _S* nested_selectors?
 
 // TODO: and/or type
 as_named: _S+ "as"i _S+ STRING
@@ -17,12 +17,13 @@ _selector_expression: text_selector
                       | section_selector
                       | text_slice_selector
                       | css_selector
-
 text_selector: "text" "[" _S* STRING _S* "]"
 sentence_selector: "sentence" ("[" _S* STRING _S* "]")?
 
 section_selector: "section" ( attrib )*
 text_slice_selector: "text-slice" "[" _S* ( STRING | NUMBER ) _S* "]"
+
+attribute_selector: "@" IDENT
 
 // https://www.w3.org/TR/CSS21/grammar.html
 css_selector: element_name (HASH | class | attrib | pseudo)* | (HASH | class | attrib | pseudo)+
