@@ -48,10 +48,13 @@ print(wikipedia.query(r'''
 
 
 
-# print(wikipedia.query(r'''
-#     from "The Beatles" {
-#         section["Discography"] as "albums" {
-#             li { a as "title" }
-#         }
-#     }
-# '''))
+print(wikipedia.query(r'''
+    from "The Beatles" {
+        section[heading="Discography"] as "albums" {
+            li {
+                a as "title";
+                text["\((.+?)\)"] >> text-slice[1] as "date"
+            }
+        }
+    }
+'''))

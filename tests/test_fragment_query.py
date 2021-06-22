@@ -43,7 +43,7 @@ def test_fragment_query_named(fragment):
     assert fragment.query(text(pattern='Fi.{3}').into('f')) == [{'f': 'First'}]
 
     assert fragment.query(alt(css(css_selector='a.second').into('a'), text(pattern='Fi.{3}').into('b'))) == \
-        [{'a': 'Second'}, {'b': 'First'}]
+        {'a': 'Second', 'b': 'First'}
 
     # section[heading=Section1] as "section" > ul as "list" > a as "link"
     assert fragment.query(

@@ -171,7 +171,7 @@ class Fragments:
 # FIXME: Base class queriable?..
 def query(subject, selector):
     if isinstance(selector, wikipedia_ql.selectors.alt):
-        return flatten([subject.query(sel) for sel in selector.selectors])
+        return flatten_and_merge([subject.query(sel) for sel in selector.selectors])
 
     fragments = Fragments(subject._select(selector))
 
@@ -188,3 +188,16 @@ def query(subject, selector):
 
 def flatten(items):
     return [subitem for item in items for subitem in (flatten(item) if isinstance(item, list) else [item])]
+
+def flatten_and_merge(items):
+    res = flatten(items)
+    if all(isinstance(item, dict) for item in res):
+        return merge(*res)
+    else:
+        return res
+
+def merge(*dicts):
+    result = {}
+    for dict in dicts:
+        result.update(dict)
+    return result
