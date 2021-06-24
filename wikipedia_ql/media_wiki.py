@@ -30,8 +30,11 @@ class Wikipedia:
         self.parser = Parser()
 
     def query(self, query_text):
-        page, selector = self.parser.parse(query_text)
-        return self.get_page(page).query(selector)
+        type, page, selector = self.parser.parse(query_text)
+        if type == 'page':
+            return self.get_page(page).query(selector)
+        elif type == 'category':
+            return [fragment.query(selector) for fragment in self.get_category(page)]
 
     def get_page(self, title):
         metadata = self.cache_get(title + '.props')
@@ -40,14 +43,31 @@ class Wikipedia:
             metadata = [*json.loads(response.content.decode('utf-8'))['query']['pages'].values()][0]
             self.cache_put(title + '.props', json_data=metadata)
 
-        real_title = metadata['title']
         # TODO: save metadata to cache under the real title, too!
+        return self._parse_page(metadata)
 
-        text_data = self.cache_get(title)
+    def get_category(self, category):
+        response = requests.get(self.API_URI,
+            params={
+                'generator': 'categorymembers',
+                'gcmtitle': f'Category:{category}',
+                'gcmnamespace': 0,
+                'gcmlimit': 100,
+                **self.QUERY_PARAMS
+            }
+        )
+        metadata = [*json.loads(response.content.decode('utf-8'))['query']['pages'].values()]
+
+        return [self._parse_page(m) for m in metadata]
+
+    def _parse_page(self, metadata):
+        real_title = metadata['title']
+
+        text_data = self.cache_get(real_title)
         if not text_data:
             response = requests.get(self.API_URI, params={'page': real_title, **self.PARSE_PARAMS})
             text_data = json.loads(response.content.decode('utf-8'))
-            self.cache_put(title, json_data=text_data)
+            self.cache_put(real_title, json_data=text_data)
 
         return fragment.Fragment.parse(text_data['parse']['text']['*'], metadata=metadata)
 

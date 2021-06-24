@@ -38,4 +38,7 @@ def test_parse_selectors_attribute(parser):
 
 def test_full_query(parser):
     assert parser.parse('from "Nomadland (film)" { text["Rotten"] }') == \
-        ("Nomadland (film)", text(pattern="Rotten"))
+        ("page", "Nomadland (film)", text(pattern="Rotten"))
+
+    assert parser.parse('from category:"Marvel Cinematic Universe films" { text["Rotten"] }') == \
+        ("category", "Marvel Cinematic Universe films", text(pattern="Rotten"))

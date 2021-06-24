@@ -1,6 +1,8 @@
 query: "from"i _S* source _S* nested_selectors
 
-source: STRING
+source: ( _source_type ":" )? STRING
+
+_source_type: IDENT
 
 // TODO: Selector-sequence: foo >> bar, foo > bar
 

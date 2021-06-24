@@ -37,13 +37,19 @@ class ValueTransformer(lark.visitors.Transformer):
         return {k: v}
 
 class Interpreter(lark.visitors.Interpreter):
-    def __init__(self, source):
+    def __init__(self, query_source):
         super().__init__()
 
-        self.source = source
+        self.query_source = query_source
 
     def query(self, tree):
-        return (tree.children[0].children[0], self.visit(tree.children[1]))
+        return (*self.visit(tree.children[0]), self.visit(tree.children[1]))
+
+    def source(self, tree):
+        if len(tree.children) == 1:
+            return ('page', tree.children[0])
+        elif len(tree.children) == 2:
+            return tree.children
 
     def nested_selectors(self, tree):
         return self.visit(tree.children[0])
@@ -96,5 +102,5 @@ class Interpreter(lark.visitors.Interpreter):
         return s.text_slice(group_id=tree.children[0])
 
     def css_selector(self, tree):
-        source = self.source[tree.meta.start_pos:tree.meta.end_pos]
+        source = self.query_source[tree.meta.start_pos:tree.meta.end_pos]
         return s.css(css_selector=source)

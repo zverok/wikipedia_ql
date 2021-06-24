@@ -19,3 +19,16 @@ print(wikipedia.query(r'''
         }
     }
 '''))
+
+print(wikipedia.query(r'''
+    from category:"Best Drama Picture Golden Globe winners" {
+        page@title as "title";
+        section[heading="Critical response"] {
+            sentence["Rotten Tomatoes"] {
+                text["\d+%"] as "percent";
+                text["(\d+) (critic|review)"] >> text-slice[1] as "reviews";
+                text["[\d.]+/10"] as "overall"
+            }
+        }
+    }
+'''))
