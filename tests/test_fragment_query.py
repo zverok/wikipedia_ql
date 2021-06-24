@@ -3,11 +3,11 @@ import re
 import pytest
 
 from wikipedia_ql.fragment import Fragment
-from wikipedia_ql.selectors import text, section, css, alt
+from wikipedia_ql.selectors import text, section, css, alt, page
 
-def make_fragment(html):
+def make_fragment(html, **kwargs):
     # Because fragment is Wikipedia-oriented and always looks for this div :shrug:
-    return Fragment.parse(f'<div class="mw-parser-output">{html.strip()}</div>')
+    return Fragment.parse(f'<div class="mw-parser-output">{html.strip()}</div>', **kwargs)
 
 @pytest.fixture
 def fragment():
@@ -57,3 +57,8 @@ def test_fragment_query_named(fragment):
 def test_fragment_query_attr(fragment):
     assert fragment.query(css(css_selector='a.second', attribute='href')) == ['http://google.com']
     assert fragment.query(css(css_selector='a.second', attribute='href').into('foo')) == [{'foo': 'http://google.com'}]
+
+def test_fragment_query_attr_page():
+    fragment = make_fragment('', metadata={'title': 'Bear'})
+
+    assert fragment.query(page(attribute='title')) == ['Bear']

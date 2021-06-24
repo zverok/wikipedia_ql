@@ -1,6 +1,6 @@
 import pytest
 
-from wikipedia_ql.selectors import text, text_slice, sentence, section, css, alt
+from wikipedia_ql.selectors import text, text_slice, sentence, section, css, alt, page
 from wikipedia_ql.parser import Parser
 
 @pytest.fixture
@@ -17,6 +17,8 @@ def test_parse_selectors_base(parser):
 
     assert parser.parse_selector('text-slice[3]') == text_slice(group_id=3)
     assert parser.parse_selector('text-slice["good"]') == text_slice(group_id='good')
+
+    assert parser.parse_selector('page') == page()
 
 def test_parse_selectors_named(parser):
     assert parser.parse_selector('text["foo"] as "bar"') == text(pattern='foo').into("bar")

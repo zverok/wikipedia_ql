@@ -49,7 +49,7 @@ print(wikipedia.query(r'''
 
 
 print(wikipedia.query(r'''
-    from "The Beatles" {
+    from "Bjork" {
         section[heading="Discography"] as "albums" {
             li {
                 a as "title";

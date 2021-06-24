@@ -22,17 +22,20 @@ class Fragment:
         return cls.parse(data['parse']['text']['*'])
 
     @classmethod
-    def parse(cls, html):
+    def parse(cls, html, *, metadata=None):
         soup = BeautifulSoup(html, 'html.parser').select('.mw-parser-output')[0]
         for sel in cls.REMOVE:
             for tag in soup.select(sel):
                 tag.extract()
 
-        return cls(soup)
+        return cls(soup, metadata=metadata, type='page')
 
-    def __init__(self, soup, text=None, text_tree=None, *, context=None):
+    def __init__(self, soup, text=None, text_tree=None, *, context=None, parent=None, metadata=None, type=None):
         self.context = context or {}
         self.soup = soup
+        self.parent = parent
+        self.metadata = metadata
+        self.type = type
 
         def build_tree(node):
             start = len(self.text)
@@ -75,6 +78,9 @@ class Fragment:
 
         # print(self.sentences)
 
+    @property
+    def page(self):
+        return self if self.parent is None else self.parent.page
 
     def slice(self, start, end, *, context=None):
         def make_slice(node, text_tree):
@@ -124,15 +130,15 @@ class Fragment:
 
         res_node, res_tree = make_slice(self.soup, self.text_tree)
 
-        return Fragment(res_node, self.text[tstart:tend], res_tree, context=context)
+        return Fragment(res_node, self.text[tstart:tend], res_tree, context=context, parent=self)
 
     def slice_tags(self, tags):
         if len(tags) == 1:
-            return Fragment(tags[0])
+            return Fragment(tags[0], parent=self)
         else:
             new_node = BeautifulSoup().new_tag('div')
             new_node.extend([copy.copy(tag) for tag in tags])
-            return Fragment(new_node)
+            return Fragment(new_node, parent=self)
 
     def select(self, selector):
         fragments = Fragments(self._select(selector))
@@ -150,7 +156,10 @@ class Fragment:
     def attribute(self, name):
         # TODO:
         # * available attr depends on fragment's type
-        return self.soup[name]
+        if self.type == 'page':
+            return self.metadata.get(name)
+        else:
+            return self.soup[name]
 
 class Fragments:
     def __init__(self, items):

@@ -12,11 +12,13 @@ selector: _selector_expression attribute_selector? as_named? _S* nested_selector
 // TODO: and/or type
 as_named: _S+ "as"i _S+ STRING
 
-_selector_expression: text_selector
+_selector_expression: page_selector
+                      | text_selector
                       | sentence_selector
                       | section_selector
                       | text_slice_selector
                       | css_selector
+page_selector: "page"
 text_selector: "text" "[" _S* STRING _S* "]"
 sentence_selector: "sentence" ("[" _S* STRING _S* "]")?
 

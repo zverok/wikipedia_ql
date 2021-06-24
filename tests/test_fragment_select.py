@@ -4,7 +4,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 from wikipedia_ql.fragment import Fragment
-from wikipedia_ql.selectors import text, text_slice, sentence, section, css, alt
+from wikipedia_ql.selectors import text, text_slice, sentence, section, css, alt, page
 
 def make_fragment(html):
     # Because fragment is Wikipedia-oriented and always looks for this div :shrug:
@@ -169,4 +169,18 @@ def test_select_text_slice():
 
     # TODO: named groups
 
-# TODO: (laterz!) text-slice, wikitable, infobox, ...
+def test_select_page():
+    fragment = make_fragment("""
+        <h2>Section1</h2>
+        <p>Text1</p>
+        <ul>
+            <li><a class="first">Link1</a></li>
+            <li class="item"><a class="second">Link2</a>text</li>
+        </ul>
+        """)
+
+    assert str(fragment.select(page()).items[0].soup) == str(fragment.soup)
+
+    assert str(fragment.select(css(css_selector='li', nested=page())).items[0].soup) == str(fragment.soup)
+
+# TODO: (laterz!) wikitable, infobox, ...

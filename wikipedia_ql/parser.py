@@ -76,6 +76,9 @@ class Interpreter(lark.visitors.Interpreter):
     def selectors(self, tree):
         return s.alt(*(self.visit(child) for child in tree.children))
 
+    def page_selector(self, tree):
+        return s.page()
+
     def section_selector(self, tree):
         attrs = {}
         for c in tree.children:

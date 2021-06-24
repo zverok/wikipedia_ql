@@ -96,6 +96,10 @@ class css(selector_base):
     def __call__(self, page):
         yield from (page.slice_tags([node]) for node in page.soup.select(self.css_selector))
 
+class page(selector_base):
+    def __call__(self, page):
+        yield page.page
+
 @dataclass
 class alt:
     selectors: List[Union['selector_base', 'alt']]
