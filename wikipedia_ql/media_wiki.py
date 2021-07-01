@@ -36,6 +36,13 @@ class Wikipedia:
         elif type == 'category':
             return [fragment.query(selector) for fragment in self.get_category(page)]
 
+    def iquery(self, query_text):
+        type, page, selector = self.parser.parse(query_text)
+        if type == 'page':
+            yield self.get_page(page).query(selector)
+        elif type == 'category':
+            yield from (fragment.query(selector) for fragment in self.get_category(page))
+
     def get_page(self, title):
         metadata = self.cache_get(title + '.props')
         if not metadata:
@@ -58,7 +65,7 @@ class Wikipedia:
         )
         metadata = [*json.loads(response.content.decode('utf-8'))['query']['pages'].values()]
 
-        return [self._parse_page(m) for m in metadata]
+        yield from (self._parse_page(m) for m in metadata)
 
     def _parse_page(self, metadata):
         real_title = metadata['title']
