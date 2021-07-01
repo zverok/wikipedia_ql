@@ -132,6 +132,10 @@ def test_select_nested():
     assert select(fragment, selector) \
         == ['<a class="first">Link1</a>', '<a class="second">Link2</a>']
 
+    # edge case: css selector of top-level node:
+    selector = text(pattern='Link1', nested=css(css_selector='a'))
+    assert select(fragment, selector) == ['<a class="first">Link1</a>']
+
 def test_select_alt():
     def select(fragment, *selectors):
         return apply(fragment, alt(*selectors), simplify=True)

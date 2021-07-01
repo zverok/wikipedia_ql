@@ -1,5 +1,6 @@
 import re
 import bs4
+import soupsieve
 
 from dataclasses import dataclass, field
 from typing import Any, Union, Dict, List, Optional
@@ -94,6 +95,12 @@ class css(selector_base):
         return self.attrs['css_selector']
 
     def __call__(self, page):
+        # Handles the corner case when the current fragment's top node is the match, e.g.
+        #   from ...<a>foo</a>...
+        #    text["foo"] >> a
+        # FIXME: Isn't there a way to ask bs to do this?..
+        if soupsieve.match(self.css_selector, page.soup):
+            yield page
         yield from (page.slice_tags([node]) for node in page.soup.select(self.css_selector))
 
 class page(selector_base):
