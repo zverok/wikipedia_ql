@@ -37,7 +37,7 @@ class text(selector_base):
     def __call__(self, page):
         yield from (page.slice(*m.span(0), context={'text': m}) for m in self.re.finditer(page.text))
 
-class text_slice(selector_base):
+class text_group(selector_base):
     @property
     def group_id(self):
         return self.attrs['group_id']

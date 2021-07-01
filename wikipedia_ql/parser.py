@@ -98,8 +98,8 @@ class Interpreter(lark.visitors.Interpreter):
     def text_selector(self, tree):
         return s.text(pattern=tree.children[0])
 
-    def text_slice_selector(self, tree):
-        return s.text_slice(group_id=tree.children[0])
+    def text_group_selector(self, tree):
+        return s.text_group(group_id=tree.children[0])
 
     def css_selector(self, tree):
         source = self.query_source[tree.meta.start_pos:tree.meta.end_pos]

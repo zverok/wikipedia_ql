@@ -2,6 +2,7 @@ import json
 import sys
 import re
 from pathlib import Path
+import time
 
 sys.path.append(str(Path(__file__).parent.joinpath('..').resolve()))
 
@@ -47,9 +48,9 @@ print(wikipedia.query(r'''
 '''))
 
 
-
+t = time.time()
 print(wikipedia.query(r'''
-    from "Bjork" {
+    from "Beatles" {
         section[heading="Discography"] as "albums" {
             li {
                 a as "title";
@@ -59,6 +60,7 @@ print(wikipedia.query(r'''
         }
     }
 '''))
+print(time.time() - t)
 
 print(wikipedia.query(r'''
     from "Bear" {

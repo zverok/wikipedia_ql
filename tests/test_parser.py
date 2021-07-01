@@ -1,6 +1,6 @@
 import pytest
 
-from wikipedia_ql.selectors import text, text_slice, sentence, section, css, alt, page
+from wikipedia_ql.selectors import text, text_group, sentence, section, css, alt, page
 from wikipedia_ql.parser import Parser
 
 @pytest.fixture
@@ -15,8 +15,8 @@ def test_parse_selectors_base(parser):
     assert parser.parse_selector('section[heading="foo"][level="3"]') == section(heading='foo', level='3')
     assert parser.parse_selector('section') == section()
 
-    assert parser.parse_selector('text-slice[3]') == text_slice(group_id=3)
-    assert parser.parse_selector('text-slice["good"]') == text_slice(group_id='good')
+    assert parser.parse_selector('text-group[3]') == text_group(group_id=3)
+    assert parser.parse_selector('text-group["good"]') == text_group(group_id='good')
 
     assert parser.parse_selector('page') == page()
 
@@ -24,13 +24,13 @@ def test_parse_selectors_named(parser):
     assert parser.parse_selector('text["foo"] as "bar"') == text(pattern='foo').into("bar")
 
 def test_parse_selectors_nested(parser):
-    assert parser.parse_selector('text["foo"] { text-slice[1] }') == \
-        text(pattern='foo', nested=text_slice(group_id=1))
-    assert parser.parse_selector('text["foo"] >> text-slice[1]') == \
-        text(pattern='foo', nested=text_slice(group_id=1))
+    assert parser.parse_selector('text["foo"] { text-group[1] }') == \
+        text(pattern='foo', nested=text_group(group_id=1))
+    assert parser.parse_selector('text["foo"] >> text-group[1]') == \
+        text(pattern='foo', nested=text_group(group_id=1))
 
-    assert parser.parse_selector('text["foo"] { text-slice[1]; text-slice[2] }') == \
-        text(pattern='foo', nested=alt(text_slice(group_id=1), text_slice(group_id=2)))
+    assert parser.parse_selector('text["foo"] { text-group[1]; text-group[2] }') == \
+        text(pattern='foo', nested=alt(text_group(group_id=1), text_group(group_id=2)))
 
 def test_parse_selectors_attribute(parser):
     assert parser.parse_selector('img@src') == css(css_selector='img', attribute='src')

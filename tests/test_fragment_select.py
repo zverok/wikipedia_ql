@@ -4,7 +4,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 from wikipedia_ql.fragment import Fragment
-from wikipedia_ql.selectors import text, text_slice, sentence, section, css, alt, page
+from wikipedia_ql.selectors import text, text_group, sentence, section, css, alt, page
 
 def make_fragment(html):
     # Because fragment is Wikipedia-oriented and always looks for this div :shrug:
@@ -148,9 +148,9 @@ def test_select_alt():
     assert select(fragment, text(pattern='Link1'), css(css_selector='a.second')) == \
         ['<a class="first">Link1</a>', '<a class="second">Link2</a>']
 
-def test_select_text_slice():
+def test_select_text_group():
     def select(fragment, id):
-        return apply(fragment, text_slice(group_id=id))
+        return apply(fragment, text_group(group_id=id))
 
     fragment = make_fragment(
         '<p>Some paragraph with <b>empasis</b> and <a href="#foo">link</a></p>'
