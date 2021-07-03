@@ -1,11 +1,6 @@
 # Fetching all pages in the category, using iquery (generator) to iterate through results
 
-import sys
-from pathlib import Path
 from pprint import pprint
-
-sys.path.append(str(Path(__file__).parent.joinpath('..').resolve()))
-
 from wikipedia_ql import media_wiki
 
 wikipedia = media_wiki.Wikipedia(cache_folder='tmp/cache')

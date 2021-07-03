@@ -11,7 +11,6 @@ from wikipedia_ql import fragment
 from wikipedia_ql.parser import Parser
 
 class Wikipedia:
-    CACHE_DIR = Path('wikipedia/cache')
     API_URI = 'https://en.wikipedia.org/w/api.php'
     PARSE_PARAMS = {
         'action': 'parse',
@@ -26,8 +25,13 @@ class Wikipedia:
         'redirects': 1
     }
 
-    def __init__(self):
+    def __init__(self, cache_folder=None):
         self.parser = Parser()
+        if cache_folder:
+            self.cache_folder = Path(cache_folder)
+            self.cache_folder.mkdir(exist_ok=True)
+        else:
+            self.cache_folder = None
 
     def query(self, query_text):
         type, page, selector = self.parser.parse(query_text)
@@ -79,14 +83,20 @@ class Wikipedia:
         return fragment.Fragment.parse(text_data['parse']['text']['*'], metadata=metadata)
 
     def cache_get(self, key):
+        if not self.cache_folder:
+            return
+
         key = re.sub(r'[?\/&]', '-', key)
-        path = self.CACHE_DIR.joinpath(f'{key}.json')
+        path = self.cache_folder.joinpath(f'{key}.json')
         if path.exists():
             return json.loads(path.read_text())
 
     def cache_put(self, key, *, text=None, json_data=None):
+        if not self.cache_folder:
+            return
+
         key = re.sub(r'[?\/&]', '-', key)
-        path = self.CACHE_DIR.joinpath(f'{key}.json')
+        path = self.cache_folder.joinpath(f'{key}.json')
         if json_data:
             text = json.dumps(json_data)
         path.write_text(text)

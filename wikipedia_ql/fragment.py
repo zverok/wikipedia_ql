@@ -111,7 +111,7 @@ class Fragment:
                 new_node = node_children[0]
                 tree_children = tree_children[0][2]
             else:
-                new_node = BeautifulSoup().new_tag('span')
+                new_node = BeautifulSoup('', 'html.parser').new_tag('span')
                 new_node.extend(node_children)
 
             return (new_node, (new_s, new_e, tree_children))
@@ -128,7 +128,7 @@ class Fragment:
         if len(tags) == 1:
             return Fragment(tags[0], parent=self)
         else:
-            new_node = BeautifulSoup().new_tag('div')
+            new_node = BeautifulSoup('', 'html.parser').new_tag('div')
             new_node.extend([copy.copy(tag) for tag in tags])
             return Fragment(new_node, parent=self)
 
@@ -148,6 +148,7 @@ class Fragment:
     def attribute(self, name):
         # TODO:
         # * available attr depends on fragment's type
+        # * not raise on not found attr
         if self.type == 'page':
             return self.metadata.get(name)
         else:
