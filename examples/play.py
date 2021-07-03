@@ -35,26 +35,26 @@ wikipedia = media_wiki.Wikipedia()
 #     }
 # '''))
 
-print(wikipedia.query(r'''
-    from "Nomadland (film)" {
-        section[heading="Critical response"] {
-            sentence["Rotten Tomatoes"] {
-                text["\d+%"] as "percent";
-                text["(\d+) (critic|review)"] >> text-slice[1] as "reviews";
-                text["[\d.]+/10"] as "overall"
-            }
-        }
-    }
-'''))
+# print(wikipedia.query(r'''
+#     from "Nomadland (film)" {
+#         section[heading="Critical response"] {
+#             sentence["Rotten Tomatoes"] {
+#                 text["\d+%"] as "percent";
+#                 text["(\d+) (critic|review)"] >> text-slice[1] as "reviews";
+#                 text["[\d.]+/10"] as "overall"
+#             }
+#         }
+#     }
+# '''))
 
 
-t = time.time()
+# t = time.time()
 print(wikipedia.query(r'''
     from "Beatles" {
         section[heading="Discography"] as "albums" {
             li {
                 a as "title";
-                text["\((.+?)\)"] >> text-slice[1] as "date";
+                text["\((.+?)\)"] >> text-group[1] as "date";
                 a@href as "link"
             }
         }
@@ -62,8 +62,8 @@ print(wikipedia.query(r'''
 '''))
 print(time.time() - t)
 
-print(wikipedia.query(r'''
-    from "Bear" {
-        section[heading="Feeding"] >> img@src as "image"
-    }
-'''))
+# print(wikipedia.query(r'''
+#     from "Bear" {
+#         section[heading="Feeding"] >> img@src as "image"
+#     }
+# '''))

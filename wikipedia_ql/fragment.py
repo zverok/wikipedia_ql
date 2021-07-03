@@ -10,8 +10,8 @@ import wikipedia_ql
 
 class Fragment:
     REMOVE = [
-        '#toc',
-        '.mw-editsection',
+        # '#toc',
+        # '.mw-editsection',
         'sup.reference',
         'div.reflist',
         'style'
@@ -23,10 +23,9 @@ class Fragment:
 
     @classmethod
     def parse(cls, html, *, metadata=None):
-        soup = BeautifulSoup(html, 'html.parser').select('.mw-parser-output')[0]
-        for sel in cls.REMOVE:
-            for tag in soup.select(sel):
-                tag.extract()
+        soup = BeautifulSoup(html, 'html.parser').select_one('.mw-parser-output')
+        for tag in soup.select(','.join(cls.REMOVE)):
+            tag.decompose()
 
         return cls(soup, metadata=metadata, type='page')
 
@@ -37,46 +36,39 @@ class Fragment:
         self.metadata = metadata
         self.type = type
 
-        def build_tree(node):
-            start = len(self.text)
-            if isinstance(node, bs4.element.NavigableString):
-                self.text += str(node)
-                children = []
-            else:
-                children = [build_tree(child) for child in node.children]
-                if node.name in ['p', 'div', 'ul', 'ol', 'li', 'table', 'tbody', 'tr', 'br', 'h2', 'h3', 'h4', 'h5']:
-                    self.text += "\n"
-                elif node.name in ['td', 'th']:
-                    self.text += " "
-                else:
-                    pass
-
-            end = len(self.text)
-
-            return (start, end, children)
-
         if text is None:
-            self.text = ''
-            self.text_tree = build_tree(soup)
+            self._text = None
+            self._text_tree = None
         else:
-            self.text = text
-            self.text_tree = text_tree
+            self._text = text
+            self._text_tree = text_tree
 
-        # nlp = English()
-        # nlp.add_pipe(nlp.create_pipe("sentencizer"))
-        # doc = nlp(self.text)
-        # # FIXME: Newlines are ignored this way! Sentences include tables and hNs and whatnot
-        # self.sentences = [*doc.sents]
+        self._sentences = None
 
-        sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
-        self.sentences = []
-        start = 0
-        for line in self.text.split("\n"):
-            for s, e in sent_detector.span_tokenize(line):
-                self.sentences.append((line[s:e], start + s, start +e))
-            start += len(line) + 1 # \n
+    @property
+    def text(self):
+        if self._text == None:
+            self._build_tree()
+        return self._text
 
-        # print(self.sentences)
+    @property
+    def text_tree(self):
+        if self._text == None:
+            self._build_tree()
+        return self._text_tree
+
+    @property
+    def sentences(self):
+        if self._sentences == None:
+            sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
+            self._sentences = []
+            start = 0
+            for line in self.text.split("\n"):
+                for s, e in sent_detector.span_tokenize(line):
+                    self._sentences.append((line[s:e], start + s, start +e))
+                start += len(line) + 1 # \n
+
+        return self._sentences
 
     @property
     def page(self):
@@ -160,6 +152,29 @@ class Fragment:
             return self.metadata.get(name)
         else:
             return self.soup[name]
+
+    def _build_tree(self):
+        def build_subtree(node):
+            start = len(self._text)
+            if isinstance(node, bs4.element.NavigableString):
+                self._text += str(node)
+                children = []
+            else:
+                children = [build_subtree(child) for child in node.children]
+                if node.name in ['p', 'div', 'ul', 'ol', 'li', 'table', 'tbody', 'tr', 'br', 'h2', 'h3', 'h4', 'h5']:
+                    self._text += "\n"
+                elif node.name in ['td', 'th']:
+                    self._text += " "
+                else:
+                    pass
+
+            end = len(self._text)
+
+            return (start, end, children)
+
+        self._text = ''
+        self._text_tree = build_subtree(self.soup) # will update _text, too
+
 
 class Fragments:
     def __init__(self, items):
