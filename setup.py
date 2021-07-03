@@ -1,7 +1,43 @@
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+long_description = r"""
+# WikipediaQL: querying structured data from Wikipedia
+
+**WikipediaQL** is an _experimental query language_ and Python library for querying structured data from Wikipedia. It looks like this:
+
+```python
+from wikipedia_ql import media_wiki
+
+wikipedia = media_wiki.Wikipedia()
+
+print(wikipedia.query(r'''
+    from "Guardians of the Galaxy (film)" {
+        page@title as "title";
+        section[heading="Cast"] as "cast" {
+            li >> text["^(.+?) as (.+?):"] {
+                text-group[1] as "actor";
+                text-group[2] as "character"
+            }
+        };
+        section[heading="Critical response"] {
+            sentence["Rotten Tomatoes"] as "RT ratings" {
+                text["\d+%"] as "percent";
+                text["(\d+) (critic|review)"] >> text-group[1] as "reviews";
+                text["[\d.]+/10"] as "overall"
+            }
+        }
+    }
+'''))
+
+# {
+#     'title': 'Guardians of the Galaxy (film)',
+#     'cast': [{'actor': 'Chris Pratt', 'character': 'Peter Quill / Star-Lord'}, {'actor': 'Zoe Saldana', 'character': 'Gamora'}, {'actor': 'Dave Bautista', 'character': 'Drax the Destroyer'}, {'actor': 'Vin Diesel', 'character': 'Groot'}, {'actor': 'Bradley Cooper', 'character': 'Rocket'}, {'actor': 'Lee Pace', 'character': 'Ronan the Accuser'}, {'actor': 'Michael Rooker', 'character': 'Yondu Udonta'}, {'actor': 'Karen Gillan', 'character': 'Nebula'}, {'actor': 'Djimon Hounsou', 'character': 'Korath'}, {'actor': 'John C. Reilly', 'character': 'Rhomann Dey'}, {'actor': 'Glenn Close', 'character': 'Irani Rael'}, {'actor': 'Benicio del Toro', 'character': 'Taneleer Tivan / The Collector'}],
+#     'RT ratings': {'percent': '92%', 'reviews': '328', 'overall': '7.82/10'}
+# }
+```
+
+[Read full README.md on GitHub](https://github.com/zverok/wikipedia_ql)
+"""
 
 setuptools.setup(
     name="wikipedia_ql",
