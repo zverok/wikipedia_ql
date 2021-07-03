@@ -1,0 +1,1 @@
+The examples in this folder could be run with installed `wikipedia_ql` with just `python <example_name>.py`, or, if you just experimenting with the project cloned from GitHub, with `poetry run python -m examples.<example_name>`.
