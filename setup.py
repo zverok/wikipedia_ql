@@ -1,6 +1,6 @@
 import setuptools
 
-with open("README.rst", "r") as fh:
+with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
@@ -10,6 +10,7 @@ setuptools.setup(
     author_email="zverok.offline@gmail.com",
     description="Query Language for Wikipedia",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/zverok/wikipedia_ql",
     packages=setuptools.find_packages(),
     include_package_data=True,
