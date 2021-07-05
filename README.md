@@ -235,6 +235,8 @@ Some similar projects (say, [wtf_wikipedia](https://github.com/spencermountain/w
 
 This project is the N-th iteration of the ideas about providing "common knowledge" in a computable form. Most of the previous work was done in Ruby and centered around **[Reality](https://github.com/molybdenum-99/reality)** project; and included, amongst other things, **[Infoboxer](https://github.com/molybdenum-99/infoboxer)** the Wikipedia parser/high-level client, and [MediaWiktory](https://github.com/molybdenum-99/mediawiktory) the idiomatic low-level MediaWiki client. Some of that work still to be incorporated into WikipediaQL and sister projects.
 
+That project was once inspired by ["integrated knowledge"](https://www.wolfram.com/knowledgebase/) feature of Wolfram Language, I've talked about it (and other topics leading to this project) in a [Twitter thread](https://twitter.com/zverok/status/1397651367909629953) (yes).
+
 The WikipediaQL syntax seems to be subconsciously inspired by [qsx](https://github.com/danburzo/qsx) selectors language. (By _subconsciously_ I mean I don't remember thinking "Oh, I should do something similar", but the day I've published WikipediQL, [past.codes](https://past.codes/) service have reminded me I starred `qsx` in December 2020. I started to think about WikipediaQL syntax in June 2021, but there are striking similarities, so it should be related to some indirect inspiration by that project.)
 
 ## License
