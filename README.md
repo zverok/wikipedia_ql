@@ -211,9 +211,9 @@ from <source> {
 
 ## Roadmap
 
-* **0.0.2** links following + some low-hanging optimizations and enhancements
-* **0.0.3** `infobox`, `wikitable` and related selectors
-* **0.0.4** more Wikipedia API support (page metadata, page lists etc.)
+* **0.0.3** links following + some low-hanging optimizations and enhancements
+* **0.0.4** `infobox`, `wikitable` and related selectors
+* **0.0.5** more Wikipedia API support (page metadata, page lists etc.)
 * **0.1.0** efficiency & robustness of existing features
 * **0.2.0** documentation and principal portability to other languages
 * (maybe) online client-side demo, using [Pyodide](https://pyodide.org/en/stable/)?..
