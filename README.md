@@ -231,6 +231,12 @@ Some similar projects (say, [wtf_wikipedia](https://github.com/spencermountain/w
 1. The list of templates is infinite and unpredictable. While ten city-related pages would have `{{Infobox city` in a pretty similar form, the eleventh will have `{{Geobox capital` with all the different fields and conventions—but in HTML they would render to the similarly-looking `<table class="infobox"`. Or, some TV series will represent a list of episodes with just a plain table markup, while the other will use a sophisticated `{{Episode list` template. And it all might change with time (some spring cleanup replacing all the template names or converting some regular text to a template). The HTML version is _much_ more stable and predictable.
 2. To library/QL users, having Wikitext&templates as the base would mean that writing queries requires intimate knowledge of Wikitext format and conventions and frequently looking at the page's source (via "Edit") to find out how something is represented in Wikitext. OTOH, HTML/CSS-based approach relies on widely known elements like headers, lists, links, tables, and simple grouping objects, like sections and sentences. Most of them are unambiguously deduced by looking at the page in the browser or, in the worst case, by "inspect element" (to find out its particular class/id).
 
+## Prior work
+
+This project is the N-th iteration of the ideas about providing "common knowledge" in a computable form. Most of the previous work was done in Ruby and centered around **[Reality](https://github.com/molybdenum-99/reality)** project; and included, amongst other things, **[Infoboxer](https://github.com/molybdenum-99/infoboxer)** the Wikipedia parser/high-level client, and [MediaWiktory](https://github.com/molybdenum-99/mediawiktory) the idiomatic low-level MediaWiki client. Some of that work still to be incorporated into WikipediaQL and sister projects.
+
+The WikipediaQL syntax seems to be subconsciously inspired by [qsx](https://github.com/danburzo/qsx) selectors language. (By _subconsciously_ I mean I don't remember thinking "Oh, I should do something similar", but the day I've published WikipediQL, [past.codes](https://past.codes/) service have reminded me I starred `qsx` in December 2020. I started to think about WikipediaQL syntax in June 2021, but there are striking similarities, so it should be related to some indirect inspiration by that project.)
+
 ## License
 
 MIT
