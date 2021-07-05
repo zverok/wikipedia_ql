@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wikipedia_ql"
-version = "0.0.1"
+version = "0.0.2"
 description = "Query Language for Wikipedia"
 authors = ["zverok <zverok.offline@gmail.com>"]
 

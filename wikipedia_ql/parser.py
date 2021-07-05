@@ -1,3 +1,4 @@
+from pathlib import Path
 from lark import Lark
 import lark
 
@@ -5,9 +6,9 @@ from wikipedia_ql import selectors as s
 
 class Parser:
     def __init__(self):
-        # TODO: open_from_package
+        # TODO: open_from_package (can't make it work for now?..)
         self.lark = Lark.open(
-            'wikipedia_ql/wikipedia_ql.lark',
+            Path(__file__).parent / 'wikipedia_ql.lark',
             start=["query", "selector"],
             propagate_positions=True
         )
