@@ -57,6 +57,11 @@ class Wikipedia:
         # TODO: save metadata to cache under the real title, too!
         return self._parse_page(metadata)
 
+    def get_pages(self, titles):
+        # TODO: We can multi-fetch all pages metadata with one query; but before that we'll check if
+        # some of it is in the cache already
+        return [self.get_page(title) for title in titles]
+
     def get_category(self, category):
         response = requests.get(self.API_URI,
             params={
@@ -67,6 +72,8 @@ class Wikipedia:
                 **self.QUERY_PARAMS
             }
         )
+        # TODO: Continue if there is more than 100 pages in category
+        # TODO: Distinguish nested category; go recursively by separate parameter
         metadata = [*json.loads(response.content.decode('utf-8'))['query']['pages'].values()]
 
         yield from (self._parse_page(m) for m in metadata)
@@ -80,7 +87,7 @@ class Wikipedia:
             text_data = json.loads(response.content.decode('utf-8'))
             self.cache_put(real_title, json_data=text_data)
 
-        return fragment.Fragment.parse(text_data['parse']['text']['*'], metadata=metadata)
+        return fragment.Fragment.parse(text_data['parse']['text']['*'], metadata=metadata, media_wiki=self)
 
     def cache_get(self, key):
         if not self.cache_folder:

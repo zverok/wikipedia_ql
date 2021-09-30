@@ -6,10 +6,12 @@ _source_type: IDENT
 
 // TODO: Selector-sequence: foo >> bar, foo > bar
 
-nested_selectors: ("{" _SM* selectors _SM* "}" | _SM* ">>" _SM* selector )
+nested_selectors: ("{" _SM* selectors _SM* "}" | _SM* ">>" _SM* selector | _SM* follow_link)
 
 ?selectors: selector _S* (";" _SM* selector)* ";" ?
 selector: _selector_expression attribute_selector? as_named? _S* nested_selectors?
+
+follow_link: "->" _SM* nested_selectors
 
 // TODO: and/or type
 as_named: _S+ "as"i _S+ STRING

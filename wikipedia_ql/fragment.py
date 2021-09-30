@@ -7,6 +7,7 @@ import nltk
 import nltk.data
 
 import wikipedia_ql
+from wikipedia_ql.selectors import follow_link
 
 class Fragment:
     REMOVE = [
@@ -22,19 +23,20 @@ class Fragment:
         return cls.parse(data['parse']['text']['*'])
 
     @classmethod
-    def parse(cls, html, *, metadata=None):
+    def parse(cls, html, *, metadata=None, media_wiki=None):
         soup = BeautifulSoup(html, 'html.parser').select_one('.mw-parser-output')
         for tag in soup.select(','.join(cls.REMOVE)):
             tag.decompose()
 
-        return cls(soup, metadata=metadata, type='page')
+        return cls(soup, metadata=metadata, type='page', media_wiki=media_wiki)
 
-    def __init__(self, soup, text=None, text_tree=None, *, context=None, parent=None, metadata=None, type=None):
+    def __init__(self, soup, text=None, text_tree=None, *, context=None, parent=None, metadata=None, type=None, media_wiki=None):
         self.context = context or {}
         self.soup = soup
         self.parent = parent
         self.metadata = metadata
         self.type = type
+        self.media_wiki = media_wiki
 
         if text is None:
             self._text = None

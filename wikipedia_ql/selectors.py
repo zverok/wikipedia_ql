@@ -1,6 +1,7 @@
 import re
 import bs4
 import soupsieve
+import urllib.parse
 
 from dataclasses import dataclass, field
 from typing import Any, Union, Dict, List, Optional
@@ -106,6 +107,17 @@ class css(selector_base):
 class page(selector_base):
     def __call__(self, page):
         yield page.page
+
+class follow_link(selector_base):
+    def __call__(self, page):
+        # FIXME: Make it async (and have a queue of pages to fetch)
+        # FIXME: make it just `fragment.query('a[href^="/wiki"]@href')` to fetch pagenames
+        # FIXME: Don't fail on non-wiki links in the selected chunk!
+        if page.soup.name == 'a':
+            page_names = [urllib.parse.unquote(page.soup['href'].replace('/wiki/', ''))]
+        else:
+            page_names = [urllib.parse.unquote(a['href'].replace('/wiki/', '')) for a in page.soup.select('a')]
+        yield from page.page.media_wiki.get_pages(page_names)
 
 @dataclass
 class alt:

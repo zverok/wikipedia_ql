@@ -105,3 +105,6 @@ class Interpreter(lark.visitors.Interpreter):
     def css_selector(self, tree):
         source = self.query_source[tree.meta.start_pos:tree.meta.end_pos]
         return s.css(css_selector=source)
+
+    def follow_link(self, tree):
+        return s.follow_link(nested=self.visit(tree.children[0]))
