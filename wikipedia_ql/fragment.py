@@ -36,7 +36,7 @@ class Fragment:
         self.parent = parent
         self.metadata = metadata
         self.type = type
-        self.media_wiki = media_wiki
+        self.media_wiki = parent.media_wiki if parent else media_wiki
 
         if text is None:
             self._text = None
@@ -145,6 +145,8 @@ class Fragment:
         return [*selector(self)]
 
     def query(self, selector):
+        if isinstance(selector, str):
+            selector = self.media_wiki.parser.parse_selector(selector)
         return query(self, selector)
 
     def attribute(self, name):

@@ -109,15 +109,11 @@ class page(selector_base):
         yield page.page
 
 class follow_link(selector_base):
-    def __call__(self, page):
-        # FIXME: Make it async (and have a queue of pages to fetch)
-        # FIXME: make it just `fragment.query('a[href^="/wiki"]@href')` to fetch pagenames
+    def __call__(self, fragment):
+        # TODO: Make it async (and have a queue of pages to fetch)
         # FIXME: Don't fail on non-wiki links in the selected chunk!
-        if page.soup.name == 'a':
-            page_names = [urllib.parse.unquote(page.soup['href'].replace('/wiki/', ''))]
-        else:
-            page_names = [urllib.parse.unquote(a['href'].replace('/wiki/', '')) for a in page.soup.select('a')]
-        yield from page.page.media_wiki.get_pages(page_names)
+        page_names = [urllib.parse.unquote(href.replace('/wiki/', '')) for href in fragment.query('a@href')]
+        yield from fragment.media_wiki.get_pages(page_names)
 
 @dataclass
 class alt:
