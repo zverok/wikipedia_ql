@@ -165,7 +165,7 @@ def test_select_text_group():
     ]
 
     # When not after text
-    with pytest.raises(ValueError, match='text-slice is only allowed after text'):
+    with pytest.raises(ValueError, match='text-group is only allowed after text'):
         select(fragment, 1)
 
     # When slice index is out of range

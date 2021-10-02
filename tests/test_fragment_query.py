@@ -58,6 +58,8 @@ def test_fragment_query_attr(fragment):
     assert fragment.query(css(css_selector='a.second', attribute='href')) == ['http://google.com']
     assert fragment.query(css(css_selector='a.second', attribute='href').into('foo')) == [{'foo': 'http://google.com'}]
 
+    assert fragment.query(css(css_selector='a.second', attribute='nonexistent').into('foo')) == [{'foo': None}]
+
 def test_fragment_query_attr_page():
     fragment = make_fragment('', metadata={'title': 'Bear'})
 

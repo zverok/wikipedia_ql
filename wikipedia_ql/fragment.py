@@ -156,7 +156,10 @@ class Fragment:
         if self.type == 'page':
             return self.metadata.get(name)
         else:
-            return self.soup[name]
+            value = self.soup.get(name)
+            if value and (name == 'href' or name == 'src') and self.media_wiki:
+                value = self.media_wiki.absoluteize_uri(value)
+            return value
 
     def _build_tree(self):
         def build_subtree(node):

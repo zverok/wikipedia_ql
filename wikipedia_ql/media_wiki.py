@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 import re
+import urllib.parse
 
 import requests
 
@@ -60,7 +61,7 @@ class Wikipedia:
     def get_pages(self, titles):
         # TODO: We can multi-fetch all pages metadata with one query; but before that we'll check if
         # some of it is in the cache already
-        return [self.get_page(title) for title in titles]
+        return filter(None, [self.get_page(title) for title in titles])
 
     def get_category(self, category):
         response = requests.get(self.API_URI,
@@ -79,6 +80,9 @@ class Wikipedia:
         yield from (self._parse_page(m) for m in metadata)
 
     def _parse_page(self, metadata):
+        if 'missing' in metadata:
+            return None
+
         real_title = metadata['title']
 
         text_data = self.cache_get(real_title)
@@ -108,3 +112,18 @@ class Wikipedia:
             text = json.dumps(json_data)
         path.write_text(text)
 
+    # URI services:
+    def absoluteize_uri(self, uri):
+        parsed = urllib.parse.urlparse(uri)
+        if not parsed.scheme:
+            parsed = parsed._replace(scheme='https') # TODO: Might want to take the scheme of the real Wiki we used
+        if not parsed.netloc:
+            parsed = parsed._replace(netloc='en.wikipedia.org') # TODO: take the real Wiki domain we are using
+
+        return parsed.geturl()
+
+    def page_name_from_uri(self, uri):
+        if not uri.startswith('https://en.wikipedia.org/wiki/'): # TODO: Same as above, take real wiki URL!
+            return None
+
+        return urllib.parse.unquote(uri.replace('https://en.wikipedia.org/wiki/', ''))

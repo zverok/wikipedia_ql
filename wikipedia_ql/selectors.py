@@ -1,7 +1,6 @@
 import re
 import bs4
 import soupsieve
-import urllib.parse
 
 from dataclasses import dataclass, field
 from typing import Any, Union, Dict, List, Optional
@@ -46,7 +45,7 @@ class text_group(selector_base):
 
     def __call__(self, page):
         if not 'text' in page.context:
-            raise ValueError('text-slice is only allowed after text')
+            raise ValueError('text-group is only allowed after text')
 
         match = page.context['text']
 
@@ -110,9 +109,8 @@ class page(selector_base):
 
 class follow_link(selector_base):
     def __call__(self, fragment):
-        # TODO: Make it async (and have a queue of pages to fetch)
-        # FIXME: Don't fail on non-wiki links in the selected chunk!
-        page_names = [urllib.parse.unquote(href.replace('/wiki/', '')) for href in fragment.query('a@href')]
+        # TODO: Make it async (and have a queue of pages to fetch)?
+        page_names = filter(None, [fragment.media_wiki.page_name_from_uri(href) for href in fragment.query('a@href')])
         yield from fragment.media_wiki.get_pages(page_names)
 
 @dataclass
