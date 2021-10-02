@@ -11,6 +11,9 @@ import lark
 from wikipedia_ql import fragment
 from wikipedia_ql.parser import Parser
 
+# TODO: Include version: wikipedia_ql/{version}
+DEFAULT_UA = 'wikipedia_ql (https://github.com/zverok/wikipedia_ql; zverok.offline@gmail.com)'
+
 class Wikipedia:
     API_URI = 'https://en.wikipedia.org/w/api.php'
     PARSE_PARAMS = {
@@ -26,13 +29,15 @@ class Wikipedia:
         'redirects': 1
     }
 
-    def __init__(self, cache_folder=None):
+    def __init__(self, cache_folder=None, user_agent=DEFAULT_UA):
         self.parser = Parser()
         if cache_folder:
             self.cache_folder = Path(cache_folder)
             self.cache_folder.mkdir(exist_ok=True)
         else:
             self.cache_folder = None
+
+        self.user_agent = user_agent
 
     def query(self, query_text):
         type, page, selector = self.parser.parse(query_text)
@@ -51,7 +56,7 @@ class Wikipedia:
     def get_page(self, title):
         metadata = self.cache_get(title + '.props')
         if not metadata:
-            response = requests.get(self.API_URI, params={'titles': title, **self.QUERY_PARAMS})
+            response = self.__query_get(titles=title)
             metadata = [*json.loads(response.content.decode('utf-8'))['query']['pages'].values()][0]
             self.cache_put(title + '.props', json_data=metadata)
 
@@ -64,14 +69,11 @@ class Wikipedia:
         return filter(None, [self.get_page(title) for title in titles])
 
     def get_category(self, category):
-        response = requests.get(self.API_URI,
-            params={
-                'generator': 'categorymembers',
-                'gcmtitle': f'Category:{category}',
-                'gcmnamespace': 0,
-                'gcmlimit': 100,
-                **self.QUERY_PARAMS
-            }
+        response = self.__query_get(
+            generator = 'categorymembers',
+            gcmtitle = f'Category:{category}',
+            gcmnamespace = 0,
+            gcmlimit = 100
         )
         # TODO: Continue if there is more than 100 pages in category
         # TODO: Distinguish nested category; go recursively by separate parameter
@@ -127,3 +129,10 @@ class Wikipedia:
             return None
 
         return urllib.parse.unquote(uri.replace('https://en.wikipedia.org/wiki/', ''))
+
+    # Real fetching
+    def __query_get(self, **params):
+        return requests.get(
+            self.API_URI,
+            params={**params, **self.QUERY_PARAMS},
+            headers={'User-Agent': self.user_agent})
