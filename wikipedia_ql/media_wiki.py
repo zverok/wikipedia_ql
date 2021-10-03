@@ -16,6 +16,7 @@ DEFAULT_UA = 'wikipedia_ql (https://github.com/zverok/wikipedia_ql; zverok.offli
 
 class Wikipedia:
     API_URI = 'https://en.wikipedia.org/w/api.php'
+    PARSOID_API_URI = 'https://en.wikipedia.org/api/rest_v1/page/html/'
     PARSE_PARAMS = {
         'action': 'parse',
         'format': 'json',
@@ -87,29 +88,33 @@ class Wikipedia:
 
         real_title = metadata['title']
 
-        text_data = self.cache_get(real_title)
+        text_data = self.cache_get(real_title, format='html')
         if not text_data:
-            response = requests.get(self.API_URI, params={'page': real_title, **self.PARSE_PARAMS})
-            text_data = json.loads(response.content.decode('utf-8'))
-            self.cache_put(real_title, json_data=text_data)
+            response = self.__page_get(real_title)
+            text_data = response.content.decode('utf-8')
+            self.cache_put(real_title, text=text_data, format='html')
 
-        return fragment.Fragment.parse(text_data['parse']['text']['*'], metadata=metadata, media_wiki=self)
+        return fragment.Fragment.parse(text_data, metadata=metadata, media_wiki=self)
 
-    def cache_get(self, key):
+    def cache_get(self, key, *, format='json'):
         if not self.cache_folder:
             return
 
         key = re.sub(r'[?\/&]', '-', key)
-        path = self.cache_folder.joinpath(f'{key}.json')
+        path = self.cache_folder.joinpath(f'{key}.{format}')
         if path.exists():
-            return json.loads(path.read_text())
+            content = path.read_text()
+            if format == 'json':
+                return json.loads(content)
+            else:
+                return content
 
-    def cache_put(self, key, *, text=None, json_data=None):
+    def cache_put(self, key, *, text=None, json_data=None, format='json'):
         if not self.cache_folder:
             return
 
         key = re.sub(r'[?\/&]', '-', key)
-        path = self.cache_folder.joinpath(f'{key}.json')
+        path = self.cache_folder.joinpath(f'{key}.{format}')
         if json_data:
             text = json.dumps(json_data)
         path.write_text(text)
@@ -117,10 +122,11 @@ class Wikipedia:
     # URI services:
     def absoluteize_uri(self, uri):
         parsed = urllib.parse.urlparse(uri)
+        if not parsed.netloc:
+            # TODO: the real URL base should be taken from header > base@href of parsoid output!
+            parsed = urllib.parse.urlparse(urllib.parse.urljoin('//en.wikipedia.org/wiki/', uri))
         if not parsed.scheme:
             parsed = parsed._replace(scheme='https') # TODO: Might want to take the scheme of the real Wiki we used
-        if not parsed.netloc:
-            parsed = parsed._replace(netloc='en.wikipedia.org') # TODO: take the real Wiki domain we are using
 
         return parsed.geturl()
 
@@ -135,4 +141,9 @@ class Wikipedia:
         return requests.get(
             self.API_URI,
             params={**params, **self.QUERY_PARAMS},
+            headers={'User-Agent': self.user_agent})
+
+    def __page_get(self, title):
+        return requests.get(
+            self.PARSOID_API_URI + urllib.parse.quote(title.replace(' ', '_')),
             headers={'User-Agent': self.user_agent})

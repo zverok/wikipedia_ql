@@ -35,14 +35,22 @@ def test_select_section():
         return apply(fragment, section(**args), simplify=True)
 
     fragment = make_fragment("""
-        <h2>Section1</h2>
-        <p>Text1</p>
-        <h3>Section1.1</h3>
-        <p>Text2</p>
-        <h3>Section1.2</h3>
-        <p>Text4</p>
-        <h2>Section2</h2>
-        <p>Text5</p>
+        <section>
+            <h2>Section1</h2>
+            <p>Text1</p>
+            <section>
+                <h3>Section1.1</h3>
+                <p>Text2</p>
+            </section>
+            <section>
+                <h3>Section1.2</h3>
+                <p>Text4</p>
+            </section>
+        </section>
+        <section>
+            <h2>Section2</h2>
+            <p>Text5</p>
+        </section>
         """)
 
     assert select(fragment, heading='Section1') == [
@@ -50,19 +58,36 @@ def test_select_section():
         <div>
             <h2>Section1</h2>
             <p>Text1</p>
+            <section>
+                <h3>Section1.1</h3>
+                <p>Text2</p>
+            </section>
+            <section>
+                <h3>Section1.2</h3>
+                <p>Text4</p>
+            </section>
+        </div>
+        """),
+        h("""
+        <div>
             <h3>Section1.1</h3>
             <p>Text2</p>
+        </div>
+        """),
+        h("""
+        <div>
             <h3>Section1.2</h3>
             <p>Text4</p>
         </div>
         """)
+
     ]
 
     assert select(fragment, heading='Section1.1') == [
         h("""
         <div>
-            <h3>Section1.1</h3>
-            <p>Text2</p>
+                <h3>Section1.1</h3>
+                <p>Text2</p>
         </div>
         """)
     ]
@@ -120,12 +145,14 @@ def test_select_nested():
         return [str(f.soup) for f in fragment.select(selector)]
 
     fragment = make_fragment("""
-        <h2>Section1</h2>
-        <p>Text1</p>
-        <ul>
-            <li><a class="first">Link1</a></li>
-            <li class="item"><a class="second">Link2</a>text</li>
-        </ul>
+        <section>
+            <h2>Section1</h2>
+            <p>Text1</p>
+            <ul>
+                <li><a class="first">Link1</a></li>
+                <li class="item"><a class="second">Link2</a>text</li>
+            </ul>
+        </section>
         """)
 
     selector = section(heading='Section1', nested=css(css_selector='ul', nested=text(pattern='Li...')))

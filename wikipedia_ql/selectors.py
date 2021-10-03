@@ -69,7 +69,20 @@ class section(selector_base):
         return self.attrs['heading']
 
     # TODO: Level as an optional filter; No filters at all (select all sections)
-    def __call__(self, page):
+    def __call__(self, fragment):
+        for section in fragment.soup.select('section'):
+            # TODO: allow to fetch first section by special id, like /intro or something
+            if section.get('data-mw-section-id') == '0':
+                continue
+
+            heading = section.select_one('h2, h3, h4')
+            if self.heading in heading.get_text():
+                yield fragment.slice_tags([*section.children])
+
+    # This is more generic section fetching algo (relying on Wikipedia page structure with just hX at top level);
+    # it doesn't work with Parsoid output (which made things easier), but might be useful if we'll parse other
+    # MediaWiki instances not providing Parsoid API; that's why it left here but unused.
+    def __old_section(self):
         first = None
         selected = []
         # FIXME: Currently only yields non-intersecting ones

@@ -12,14 +12,18 @@ def make_fragment(html, **kwargs):
 @pytest.fixture
 def fragment():
     return make_fragment("""
-        <h2>Section1</h2>
-        <p><b>Text1</b></p>
-        <ul>
-            <li><a class="first">First</a></li>
-            <li class="item"><a class="second" href="http://google.com">Second</a> text</li>
-        </ul>
-        <h2>Section2</h2>
-        <p><b>Text2</b> Text3</p>
+        <section>
+            <h2>Section1</h2>
+            <p><b>Text1</b></p>
+            <ul>
+                <li><a class="first">First</a></li>
+                <li class="item"><a class="second" href="http://google.com">Second</a> text</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Section2</h2>
+            <p><b>Text2</b> Text3</p>
+        </section>
         """)
 
 def test_fragment_query_simple(fragment):

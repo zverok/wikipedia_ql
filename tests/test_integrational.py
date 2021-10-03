@@ -22,12 +22,14 @@ def test_rotten_tomatoes(wiki):
 def test_attributes(wiki):
     assert wiki.query(r'''
         from "Bear" {
-            section[heading="Feeding"] >> img@src as "image"
+            section[heading="Feeding"] >> img@src as "image";
+            section[heading="Phylogeny"] >> sentence["clade"] >> a@href
         }
     ''') == [
         {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Giant_Panda_Tai_Shan.JPG/220px-Giant_Panda_Tai_Shan.JPG'},
         {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Bear_Alaska_%283%29.jpg/220px-Bear_Alaska_%283%29.jpg'},
         {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Polar_bear_%28Ursus_maritimus%29_with_its_prey.jpg/220px-Polar_bear_%28Ursus_maritimus%29_with_its_prey.jpg'},
+        'https://en.wikipedia.org/wiki/Clade'
     ]
 
 def test_category(wiki):
