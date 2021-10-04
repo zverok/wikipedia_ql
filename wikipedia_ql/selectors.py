@@ -33,10 +33,15 @@ class selector_base:
 class text(selector_base):
     @property
     def re(self):
-        return re.compile(self.attrs['pattern'])
+        pat = self.attrs.get('pattern')
+        if pat:
+            return re.compile(pat)
 
-    def __call__(self, page):
-        yield from (page.slice(*m.span(0), context={'text': m}) for m in self.re.finditer(page.text))
+    def __call__(self, fragment):
+        if self.re:
+            yield from (fragment.slice(*m.span(0), context={'text': m}) for m in self.re.finditer(fragment.text))
+        else:
+            yield fragment
 
 class text_group(selector_base):
     @property
@@ -49,7 +54,8 @@ class text_group(selector_base):
 
         match = page.context['text']
 
-        if len(match.groups()) < self.group_id:
+        if isinstance(self.group_id, int) and len(match.groups()) < self.group_id or \
+            isinstance(self.group_id, str) and not self.group_id in match.groupdict():
             return
 
         s, e = match.span(self.group_id)
@@ -58,10 +64,16 @@ class text_group(selector_base):
 class sentence(selector_base):
     @property
     def re(self):
-        return re.compile(self.attrs['pattern'])
+        pat = self.attrs.get('pattern')
+        if pat:
+            return re.compile(pat)
 
-    def __call__(self, page):
-        yield from (page.slice(start, end) for (text, start, end) in page.sentences if self.re.search(text))
+    def __call__(self, fragment):
+        yield from (
+            fragment.slice(start, end)
+            for (text, start, end) in fragment.sentences
+            if not self.re or self.re.search(text)
+        )
 
 class section(selector_base):
     @property

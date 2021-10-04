@@ -139,6 +139,12 @@ def test_select_sentence():
     assert select(fragment, 'one') == ['<span>This is <b>sentence</b> one.</span>']
     assert select(fragment, 'This.+two') == ['<span>This is phrase <a href="foo">two.</a></span>']
     assert select(fragment, 'This.+three') == []
+    assert select(fragment, None) == [
+        '<span>This is <b>sentence</b> one.</span>',
+        '<span>This is phrase <a href="foo">two.</a></span>',
+        'This is NOT',              # the whole text after </a>
+        'sentence three, probably!' # takes the whole paragraph, that's why no span
+    ]
 
 def test_select_nested():
     def select(fragment, selector):
@@ -198,7 +204,13 @@ def test_select_text_group():
     # When slice index is out of range
     assert select(fragment.select(text(pattern=r'with (\S+ and) li(.*)')), 10) == []
 
-    # TODO: named groups
+    # Named groups
+    assert select(fragment.select(text(pattern=r'with (?P<group1>\S+ and) li(.*)')), 'group1') == [
+        '<span><b>empasis</b> and</span>'
+    ]
+
+    # Non-existent group:
+    assert select(fragment.select(text(pattern=r'with (?P<group1>\S+ and) li(.*)')), 'group2') == []
 
 def test_select_page():
     fragment = make_fragment("""
