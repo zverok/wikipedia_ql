@@ -21,7 +21,7 @@ def test_parse_selectors_base(parser):
     assert parser.parse_selector('page') == page()
 
 def test_parse_selectors_named(parser):
-    assert parser.parse_selector('text["foo"] as "bar"') == text(pattern='foo').into("bar")
+    assert parser.parse_selector('text["foo"] as "bar"') == text(pattern='foo', name="bar")
 
 def test_parse_selectors_nested(parser):
     assert parser.parse_selector('text["foo"] { text-group[1] }') == \
@@ -34,7 +34,7 @@ def test_parse_selectors_nested(parser):
 
 def test_parse_selectors_attribute(parser):
     assert parser.parse_selector('img@src') == css(css_selector='img', attribute='src')
-    assert parser.parse_selector('img@src as "path"') == css(css_selector='img', attribute='src').into('path')
+    assert parser.parse_selector('img@src as "path"') == css(css_selector='img', attribute='src', name='path')
 
 def test_full_query(parser):
     assert parser.parse('from "Nomadland (film)" { text["Rotten"] }') == \

@@ -48,25 +48,25 @@ def test_fragment_query_nested(fragment):
     ) == ["\nSection2\n\nText2 Text3\n\n\n"]
 
 def test_fragment_query_named(fragment):
-    assert fragment.query(text(pattern='Fi.{3}').into('f')) == [{'f': 'First'}]
+    assert fragment.query(text(pattern='Fi.{3}', name='f')) == [{'f': 'First'}]
 
-    assert fragment.query(alt(css(css_selector='a.second').into('a'), text(pattern='Fi.{3}').into('b'))) == \
+    assert fragment.query(alt(css(css_selector='a.second', name='a'), text(pattern='Fi.{3}', name='b'))) == \
         {'a': 'Second', 'b': 'First'}
 
     # section[heading=Section1] as "section" > ul as "list" > a as "link"
     assert fragment.query(
-        section(heading='Section1', nested=css(css_selector='ul', nested=css(css_selector='a').into('link')).into('list')).into('section')
+        section(heading='Section1', nested=css(css_selector='ul', nested=css(css_selector='a', name='link'), name='list'), name='section')
     ) == [{'section': [{'list': [{'link': 'First'}, {'link': 'Second'}]}]}]
 
     assert fragment.query(
-        section(heading='Section1', nested=css(css_selector='ul', nested=css(css_selector='a'))).into('section')
+        section(heading='Section1', nested=css(css_selector='ul', nested=css(css_selector='a')), name='section')
     ) == [{'section': ['First', 'Second']}]
 
 def test_fragment_query_attr(fragment):
     assert fragment.query(css(css_selector='a.second', attribute='href')) == ['http://google.com']
-    assert fragment.query(css(css_selector='a.second', attribute='href').into('foo')) == [{'foo': 'http://google.com'}]
+    assert fragment.query(css(css_selector='a.second', attribute='href', name='foo')) == [{'foo': 'http://google.com'}]
 
-    assert fragment.query(css(css_selector='a.second', attribute='nonexistent').into('foo')) == [{'foo': None}]
+    assert fragment.query(css(css_selector='a.second', attribute='nonexistent', name='foo')) == [{'foo': None}]
 
 def test_fragment_query_attr_page():
     fragment = make_fragment('', metadata={'title': 'Bear'})

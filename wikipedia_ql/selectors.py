@@ -12,17 +12,13 @@ class selector_base:
     nested: Optional[Union['selector_base', 'alt']] = None
     attribute: Optional[str] = None
 
-    def __init__(self, *, nested=None, attribute=None, **attrs):
+    def __init__(self, *, nested=None, attribute=None, name=None, **attrs):
         # TODO: nested & attribute are mutually exclusive
         self.nested = nested
         self.attribute = attribute
 
-        self.name = None
-        self.attrs = {key: val for key, val in attrs.items() if val != None}
-
-    def into(self, name):
         self.name = name
-        return self
+        self.attrs = {key: val for key, val in attrs.items() if val != None}
 
     def __repr__(self):
         return type(self).__name__ + ''.join(f'[{name}={value!r}]' for name, value in self.attrs.items()) + \
