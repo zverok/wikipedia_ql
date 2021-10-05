@@ -32,6 +32,28 @@ def test_attributes(wiki):
         'https://en.wikipedia.org/wiki/Clade'
     ]
 
+    # Standalone attr & standalone text
+    assert wiki.query(r'''
+        from "Björk" {
+            section[heading="Discography"] {
+                li >> a {
+                    text as "title";
+                    @href as "link"
+                }
+            }
+        }
+    ''') == [
+        {'link': 'https://en.wikipedia.org/wiki/Debut_(Björk_album)', 'title': 'Debut'},
+        {'link': 'https://en.wikipedia.org/wiki/Post_(Björk_album)', 'title': 'Post'},
+        {'link': 'https://en.wikipedia.org/wiki/Homogenic', 'title': 'Homogenic'},
+        {'link': 'https://en.wikipedia.org/wiki/Vespertine', 'title': 'Vespertine'},
+        {'link': 'https://en.wikipedia.org/wiki/Medúlla', 'title': 'Medúlla'},
+        {'link': 'https://en.wikipedia.org/wiki/Volta_(album)', 'title': 'Volta'},
+        {'link': 'https://en.wikipedia.org/wiki/Biophilia_(album)', 'title': 'Biophilia'},
+        {'link': 'https://en.wikipedia.org/wiki/Vulnicura', 'title': 'Vulnicura'},
+        {'link': 'https://en.wikipedia.org/wiki/Utopia_(Björk_album)', 'title': 'Utopia'}
+    ]
+
 def test_category(wiki):
     assert wiki.query('''
         from category:"2020s American time travel television series" {

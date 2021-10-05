@@ -67,16 +67,23 @@ class Interpreter(lark.visitors.Interpreter):
                 elif child.data == 'nested_selectors':
                     nested = self.visit(child)
                 elif child.data == 'attribute_selector':
-                    attribute = child.children[0]
+                    attribute = self.visit(child)
                 else:
                     raise ValueError(f'Unidentified selector child: {child.data!r}')
+
+        if attribute and nested:
+            # TODO: Better error
+            raise ValueError('Can not have both attribute and children')
+
+        if attribute:
+            nested = attribute
+            nested.name = name
+            name = None
 
         if name:
             sel.name = name
         if nested:
             sel.nested = nested
-        if attribute:
-            sel.attribute = attribute
 
         return sel
 
@@ -85,6 +92,9 @@ class Interpreter(lark.visitors.Interpreter):
 
     def page_selector(self, tree):
         return s.page()
+
+    def attribute_selector(self, tree):
+        return s.attr(attr_name=tree.children[0])
 
     def section_selector(self, tree):
         attrs = {}
@@ -97,7 +107,8 @@ class Interpreter(lark.visitors.Interpreter):
         return s.sentence(pattern=pattern)
 
     def text_selector(self, tree):
-        return s.text(pattern=tree.children[0])
+        pattern = tree.children[0] if tree.children else None
+        return s.text(pattern=pattern)
 
     def text_group_selector(self, tree):
         return s.text_group(group_id=tree.children[0])

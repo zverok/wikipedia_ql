@@ -22,8 +22,10 @@ _selector_expression: page_selector
                       | section_selector
                       | text_group_selector
                       | css_selector
+                      | attribute_selector
+
 page_selector: "page"
-text_selector: "text" "[" _S* STRING _S* "]"
+text_selector: "text" ( "[" _S* STRING _S* "]" )?
 sentence_selector: "sentence" ("[" _S* STRING _S* "]")?
 
 section_selector: "section" ( attrib )*

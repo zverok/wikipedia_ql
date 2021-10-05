@@ -1,6 +1,6 @@
 import pytest
 
-from wikipedia_ql.selectors import text, text_group, sentence, section, css, alt, page
+from wikipedia_ql.selectors import text, text_group, sentence, section, css, alt, page, attr
 from wikipedia_ql.parser import Parser
 
 @pytest.fixture
@@ -9,6 +9,7 @@ def parser():
 
 def test_parse_selectors_base(parser):
     assert parser.parse_selector('text["foo"]') == text(pattern='foo')
+    assert parser.parse_selector('text') == text()
     assert parser.parse_selector('sentence["foo"]') == sentence(pattern='foo')
     assert parser.parse_selector('sentence') == sentence()
     assert parser.parse_selector('section[heading="foo"]') == section(heading='foo')
@@ -33,8 +34,10 @@ def test_parse_selectors_nested(parser):
         text(pattern='foo', nested=alt(text_group(group_id=1), text_group(group_id=2)))
 
 def test_parse_selectors_attribute(parser):
-    assert parser.parse_selector('img@src') == css(css_selector='img', attribute='src')
-    assert parser.parse_selector('img@src as "path"') == css(css_selector='img', attribute='src', name='path')
+    assert parser.parse_selector('img@src') == css(css_selector='img', nested=attr(attr_name='src'))
+    assert parser.parse_selector('img@src as "path"') == css(css_selector='img', nested=attr(attr_name='src', name='path'))
+
+    assert parser.parse_selector('@src as "path"') == attr(attr_name='src', name='path')
 
 def test_full_query(parser):
     assert parser.parse('from "Nomadland (film)" { text["Rotten"] }') == \

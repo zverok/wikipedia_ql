@@ -10,19 +10,15 @@ class selector_base:
     attrs: Dict = field(default_factory=dict)
     name: Optional[str] = None
     nested: Optional[Union['selector_base', 'alt']] = None
-    attribute: Optional[str] = None
 
-    def __init__(self, *, nested=None, attribute=None, name=None, **attrs):
-        # TODO: nested & attribute are mutually exclusive
+    def __init__(self, *, nested=None, name=None, **attrs):
         self.nested = nested
-        self.attribute = attribute
-
         self.name = name
+
         self.attrs = {key: val for key, val in attrs.items() if val != None}
 
     def __repr__(self):
         return type(self).__name__ + ''.join(f'[{name}={value!r}]' for name, value in self.attrs.items()) + \
-            (f'@{self.attribute}' if self.attribute else '') + \
             (f' as {self.name!r}' if self.name else '') + \
             (f' {{ {self.nested!r} }}' if self.nested else '')
 
@@ -123,6 +119,31 @@ class css(selector_base):
         if soupsieve.match(self.css_selector, page.soup):
             yield page
         yield from (page.slice_tags([node]) for node in page.soup.select(self.css_selector))
+
+# Quasi-fragment returned by attr() selector: it is only good for getting text out of it
+@dataclass
+class fragment_attribute:
+    text: str
+
+class attr(selector_base):
+    @property
+    def attr_name(self):
+        return self.attrs['attr_name']
+
+    def __call__(self, fragment):
+        # TODO:
+        # * available attr depends on fragment's type
+        # * not raise on not found attr
+        if fragment.type == 'page':
+            value = fragment.metadata.get(self.attr_name)
+        else:
+            value = fragment.soup.get(self.attr_name)
+            if value and (self.attr_name == 'href' or self.attr_name == 'src') and fragment.media_wiki:
+                value = fragment.media_wiki.absoluteize_uri(value)
+
+        if value:
+            yield fragment_attribute(value)
+
 
 class page(selector_base):
     def __call__(self, page):

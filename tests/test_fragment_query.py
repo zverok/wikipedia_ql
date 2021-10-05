@@ -3,7 +3,7 @@ import re
 import pytest
 
 from wikipedia_ql.fragment import Fragment
-from wikipedia_ql.selectors import text, section, css, alt, page
+from wikipedia_ql.selectors import text, section, css, alt, page, attr
 
 def make_fragment(html, **kwargs):
     # Because fragment is Wikipedia-oriented and always looks for this div :shrug:
@@ -40,6 +40,12 @@ def test_fragment_query_nested(fragment):
     ) == ['Text2']
 
     assert fragment.query(
+        section(heading='Section2',
+            nested=css(css_selector='b', nested=text())
+        )
+    ) == ['Text2']
+
+    assert fragment.query(
         text(pattern='Second text', nested=text(pattern='t.{3}'))
     ) == ['text']
 
@@ -63,12 +69,12 @@ def test_fragment_query_named(fragment):
     ) == [{'section': ['First', 'Second']}]
 
 def test_fragment_query_attr(fragment):
-    assert fragment.query(css(css_selector='a.second', attribute='href')) == ['http://google.com']
-    assert fragment.query(css(css_selector='a.second', attribute='href', name='foo')) == [{'foo': 'http://google.com'}]
+    assert fragment.query(css(css_selector='a.second', nested=attr(attr_name='href'))) == ['http://google.com']
+    assert fragment.query(css(css_selector='a.second', nested=attr(attr_name='href', name='foo'))) == [{'foo': 'http://google.com'}]
 
-    assert fragment.query(css(css_selector='a.second', attribute='nonexistent', name='foo')) == [{'foo': None}]
+    assert fragment.query(css(css_selector='a.second', nested=attr(attr_name='nonexistent', name='foo'))) == []
 
 def test_fragment_query_attr_page():
     fragment = make_fragment('', metadata={'title': 'Bear'})
 
-    assert fragment.query(page(attribute='title')) == ['Bear']
+    assert fragment.query(attr(attr_name='title')) == ['Bear']
