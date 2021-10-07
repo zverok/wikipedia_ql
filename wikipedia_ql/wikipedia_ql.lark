@@ -38,7 +38,8 @@ css_selector: element_name (HASH | class | attrib | pseudo)* | (HASH | class | a
 element_name: IDENT | "*"
 class: "." IDENT
 attrib: "[" _S* IDENT _S* ( ATTR_OP _S* ( IDENT | STRING ) _S* )? "]"
-pseudo: ":" IDENT // ("(" _S* [IDENT _S*]? ")")? -- FIXME: Lark goes crazy on it...
+// pseudo: ":" IDENT ("(" _S* [IDENT _S*]? ")")?
+pseudo: ":" IDENT ("(" _S* (IDENT | NUMBER ) _S* ")")?
 
 ATTR_OP: "=" | INCLUDES | DASHMATCH
 

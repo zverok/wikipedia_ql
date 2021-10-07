@@ -224,10 +224,7 @@ def query(subject, selector):
             return [query_value(fragment, selector) for fragment in fragments.items]
 
 def query_value(fragment, selector):
-    if selector.attribute:
-        return fragment.attribute(selector.attribute)
-    else:
-        return fragment.text
+    return fragment.text
 
 def flatten(items):
     return [subitem for item in items for subitem in (flatten(item) if isinstance(item, list) else [item])]
