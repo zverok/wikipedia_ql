@@ -41,7 +41,7 @@ print(wikipedia.query(r'''
 
 setuptools.setup(
     name="wikipedia_ql",
-    version="0.0.2",
+    version="0.0.3",
     author="Victor Shepelev",
     author_email="zverok.offline@gmail.com",
     description="Query Language for Wikipedia",
