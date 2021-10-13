@@ -232,7 +232,6 @@ from <source> {
 
 ## Roadmap
 
-* **0.0.3** links following + some low-hanging optimizations and enhancements
 * **0.0.4** tables support
 * **0.0.5** `infobox` and related selectors
 * **0.0.6** more Wikipedia API support (page metadata, page lists etc.)
@@ -246,7 +245,7 @@ from <source> {
 
 Wikidata is a massive effort to represent Wikipedia in a computable form. But currently, it contains much less data than Wikipedia itself; and much less accessible for _investigatory_ data extraction (TODO: good examples!) While it gets improved constantly, I wanted to tackle the problem from a different angle and see how accessible we can make Wikipedia itself, with all of its semi-structuredness.
 
-## Why not fetch and parse page sources in Wikitext?
+### Why not fetch and parse page sources in Wikitext?
 
 Some similar projects (say, [wtf_wikipedia](https://github.com/spencermountain/wtf_wikipedia)) work by fetching page source in Wikitext form, and parsing it for data extraction. This road looks pretty tempting (and for several years, I went it myself with the previous iteration: [infoboxer Ruby project](https://github.com/molybdenum-99/infoboxer)). The problem here is that at first sight, Wikitext is better structured: large chunks of data are represented by [templates](https://en.wikipedia.org/wiki/Wikipedia:Templates) like `{{Infobox; field=value, ...}}` so it really _seems_ like a better source for data extraction. There are two huge problems with this approach, though:
 
