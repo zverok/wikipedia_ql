@@ -39,7 +39,7 @@ WikipediaQL-the-library does roughly this:
 
 * Parses query in WikipediaQL-the-language;
 * Uses [MediaWiki API](https://en.wikipedia.org/w/api.php) to fetch pages' metadata;
-* Uses [`action=parse` API](https://en.wikipedia.org/w/api.php?action=help&modules=parse) to fetch each page's content HTML;
+* Uses [Parsoid API](https://www.mediawiki.org/wiki/Parsoid/API) to fetch each page's content semantic HTML;
 * Applies selectors from the query to page to extract structured data.
 
 ### Why?
@@ -112,6 +112,27 @@ for row in wikipedia.iquery(query):
 # ....
 ```
 
+Navigating through pages in one query (note the `->` which means "perform subquery in the page by link"):
+```python
+wikipedia.query(r'''
+    from "Björk" {
+        section[heading="Discography"] {
+            li >> a -> {
+                page@title as "title";
+                .infobox-image >> img >> @src as "cover"
+            }
+        }
+    }
+''')
+# [{'cover': 'https://upload.wikimedia.org/wikipedia/en/thumb/7/77/Bj%C3%B6rk-Debut-1993.png/220px-Bj%C3%B6rk-Debut-1993.png',
+#   'title': 'Debut (Björk album)'},
+#  {'cover': 'https://upload.wikimedia.org/wikipedia/en/thumb/3/3f/Bjork_Post.png/220px-Bjork_Post.png',
+#   'title': 'Post (Björk album)'},
+#  {'cover': 'https://upload.wikimedia.org/wikipedia/en/thumb/a/af/Bj%C3%B6rk_-_Homogenic.png/220px-Bj%C3%B6rk_-_Homogenic.png',
+#   'title': 'Homogenic'},
+#  ...
+```
+
 As the page source should be fetched from Wikipedia every time, and it can be a major slowdown when experimenting, `wikipedia_ql` implements super-naive caching:
 
 ```py
@@ -154,26 +175,26 @@ from <source> {
     * [ ] more powerful `heading` value patterns would be supported (probably in CSS-alike manner: `heading^="Starts from"` and so on)
   * [ ] `text`
     * [x] `text["pattern"]`: part of the document matching pattern (Python's regexp); document's structure would be preserved, so you can nest CSS and other WikipediaQL selectors inside: `li >> text["^(.+?) as"] { a@href as "link" }`
-    * [ ] `text`: without pattern specification, just selects the entire text of the parent element;
+    * [x] `text`: without pattern specification, just selects the entire text of the parent element;
     * [ ] pattern flags, like `text["pattern"i]` (case-insensitive)
     * [ ] handle inline images `alt` attribute as text
   * [ ] `text-group`: should be directly nested in `text` pattern, refers to capture a group of the regexp; see the first example in the README;
     * [x] `text-group[1]`: group by number
-    * [ ] `text-group["name"]`: named groups
+    * [x] `text-group["name"]`: named groups
   * [ ] `sentence`
     * [x] `sentence["pattern"]`: find sentence where pattern matches (whole sentence is selected)
-    * [ ] `sentence`: all sentences in the scope
+    * [x] `sentence`: all sentences in the scope
     * [ ] pattern flags (same as for text)
     * [ ] _more suitable sentence tokenizer will be used, probably: currently we are relying on nltk, which is too powerful (and large dependency) for our simplistic needs_
   * [x] `page`: refers (from any scope) to the entire current page; useful for re-nesting fetched data in a logical way and to include metadata attributes in output (see below)
   * [ ] `<selector>@<attribute>`:
       * [x] `<css_selector>@<tag_attribute>`
-        * [ ] expand URLs
+        * [x] expand URLs
       * [ ] `page@<page_attribute>`
         * [x] `title`
         * [ ] other
         * [ ] smart fetching metadata
-      * [ ] as a free-standing selector (`@title` on the top level to fetch "current page's title" instead of `page@title`, and so on)
+      * [x] as a free-standing selector (`@title` on the top level to fetch "current page's title" instead of `page@title`, and so on)
   * [ ] `infobox` and `infobox-*`: logical selectors for data from infoboxes (formalized data at the top right corner), something like `from "City name" { infobox >> infobox-value[field="Population"] }`
   * [ ] `wikitable` and `wikitable-*`: same for data tables: `from "City name" { section[heading="Climate"] >> wikitable >> wikitable-row["Average high"] }`
   * [ ] `hatnote` to fetch and process [Hatnotes](https://en.wikipedia.org/wiki/Wikipedia:Hatnote) (special links at the top of the page/section, saying "for more information, see [here]", "this page is about X, if you want Y, go [there]" and so on)
@@ -184,7 +205,7 @@ from <source> {
   * [x] sequence: `parent { children }` or `parent >> child`
   * [x] group: `{ selector1; selector2; selector3 }` fetch all the selectors in the result set
   * [ ] immediate child: `parent > child`; maybe (come good reasons) other CSS relations like `sibling1 + sibling2`
-  * [ ] **follow link**: I am not sure about the syntax yet, but something like `section["Discography"] >> li >> a => { selectors working inside the fetched page }`, to allow expressing page navigation in a singular query
+  * [x] **follow link**: `section["Discography"] >> li >> a -> { selectors working inside the fetched page }`, to allow expressing page navigation in a singular query
 * Marking information to extract:
   * [x] extract unnamed data: every terminal selector puts extracted value in resultset (the resultset then will look like several nested arrays)
   * [x] `as "variablename"`: every terminal selector with associated name puts extracted value as `{"name": value}`; there is still some uncertainty on how it all should be structured, but mostly the right thing is done
@@ -198,7 +219,7 @@ from <source> {
 
 ### Other features/problems
 
-* **Speed** is not stellar now (roughly, a few seconds per page). This is due to a) `parse` API doesn't support batch-fetching pages, so each page is fetched with a separate HTTP request, and b) this is an unoptimized prototype (so parsing takes a lot more than it could). To fix this, we plan to implement:
+* **Speed** is not stellar now (roughly, a few seconds per page). This is due to a) Parsoid API doesn't support batch-fetching pages, so each page is fetched with a separate HTTP request, and b) this is an unoptimized prototype (so parsing takes a lot more than it could). To fix this, we plan to implement:
   * [ ] Less naive page caching
   * [ ] Profiling and optimizations (like probably using naked `lxml` instead of `BeautifulSoup`, and simpler sentence tokenizer)
   * [ ] Support for async/parallel processing (as far as I can understand, _in Python_ async I/O would be the most useful optimization; but multi-threaded selectors processing will bring no gain due to GIL?)
@@ -212,8 +233,9 @@ from <source> {
 ## Roadmap
 
 * **0.0.3** links following + some low-hanging optimizations and enhancements
-* **0.0.4** `infobox`, `wikitable` and related selectors
-* **0.0.5** more Wikipedia API support (page metadata, page lists etc.)
+* **0.0.4** tables support
+* **0.0.5** `infobox` and related selectors
+* **0.0.6** more Wikipedia API support (page metadata, page lists etc.)
 * **0.1.0** efficiency & robustness of existing features
 * **0.2.0** documentation and principal portability to other languages
 * (maybe) online client-side demo, using [Pyodide](https://pyodide.org/en/stable/)?..
