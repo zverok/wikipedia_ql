@@ -21,12 +21,15 @@ _selector_expression: page_selector
                       | sentence_selector
                       | section_selector
                       | text_group_selector
+                      | table_data_selector
                       | css_selector
                       | attribute_selector
 
 page_selector: "page"
 text_selector: "text" ( "[" _S* STRING _S* "]" )?
 sentence_selector: "sentence" ("[" _S* STRING _S* "]")?
+
+table_data_selector: "table-data"
 
 section_selector: "section" ( attrib )*
 text_group_selector: "text-group" "[" _S* ( STRING | NUMBER ) _S* "]"
@@ -41,11 +44,12 @@ attrib: "[" _S* IDENT _S* ( ATTR_OP _S* ( IDENT | STRING ) _S* )? "]"
 // pseudo: ":" IDENT ("(" _S* [IDENT _S*]? ")")?
 pseudo: ":" IDENT ("(" _S* (IDENT | NUMBER ) _S* ")")?
 
-ATTR_OP: "=" | INCLUDES | DASHMATCH
+ATTR_OP: "=" | INCLUDES | DASHMATCH | ENDSWITH
 
 FUNCTION: IDENT "("
 INCLUDES: "~="
 DASHMATCH: "|="
+ENDSWITH: "$="
 HASH: "#" NAME
 IDENT:   "-"? NMSTART NMCHAR*
 NAME:    NMCHAR+

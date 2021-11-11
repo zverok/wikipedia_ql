@@ -5,6 +5,8 @@ import soupsieve
 from dataclasses import dataclass, field
 from typing import Any, Union, Dict, List, Optional
 
+import wikipedia_ql.tables
+
 @dataclass
 class selector_base:
     attrs: Dict = field(default_factory=dict)
@@ -154,6 +156,14 @@ class follow_link(selector_base):
         # TODO: Make it async (and have a queue of pages to fetch)?
         page_names = filter(None, [fragment.media_wiki.page_name_from_uri(href) for href in fragment.query('a@href')])
         yield from fragment.media_wiki.get_pages(page_names)
+
+class table_data(selector_base):
+    def __call__(self, fragment):
+        if fragment.type == 'page' or fragment.soup.name != 'table':
+            raise ValueError('table-data should be nested in a table directly')
+
+        table = wikipedia_ql.tables.reflow(fragment.soup)
+        yield fragment.slice_tags([table])
 
 @dataclass
 class alt:

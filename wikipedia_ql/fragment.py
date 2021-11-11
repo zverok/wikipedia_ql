@@ -171,8 +171,8 @@ class Fragment:
                 children = [build_subtree(child) for child in node.children]
                 if node.name in ['p', 'div', 'ul', 'ol', 'li', 'table', 'tbody', 'tr', 'br', 'h2', 'h3', 'h4', 'h5']:
                     self._text += "\n"
-                elif node.name in ['td', 'th']:
-                    self._text += " "
+                # elif node.name in ['td', 'th']:
+                #     self._text += " "
                 else:
                     pass
 
