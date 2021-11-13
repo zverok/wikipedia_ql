@@ -4,6 +4,7 @@ import pytest
 
 from wikipedia_ql.fragment import Fragment
 from wikipedia_ql.selectors import text, section, css, alt, page, attr
+from wikipedia_ql.parser import Parser
 
 def make_fragment(html, **kwargs):
     # Because fragment is Wikipedia-oriented and always looks for this div :shrug:
@@ -15,9 +16,9 @@ def fragment():
         <section>
             <h2>Section1</h2>
             <p><b>Text1</b></p>
-            <ul>
-                <li><a class="first">First</a></li>
-                <li class="item"><a class="second" href="http://google.com">Second</a> text</li>
+            <ul id="list">
+                <li id="li1"><a class="first">First</a></li>
+                <li id="li2" class="item"><a class="second" href="http://google.com">Second</a> text</li>
             </ul>
         </section>
         <section>
@@ -25,6 +26,10 @@ def fragment():
             <p><b>Text2</b> Text3</p>
         </section>
         """)
+
+@pytest.fixture
+def parser():
+    return Parser()
 
 def test_fragment_query_simple(fragment):
     assert fragment.query(text(pattern='Fi.{3}')) == ['First']
@@ -78,3 +83,10 @@ def test_fragment_query_attr_page():
     fragment = make_fragment('', metadata={'title': 'Bear'})
 
     assert fragment.query(attr(attr_name='title')) == ['Bear']
+
+def test_fragment_query_merging(fragment, parser):
+    assert fragment.query(parser.parse_selector('ul { @id as "id"; li { text as "value" } }')) == \
+        [{'id': 'list'}, {'value': 'First'}, {'value': 'Second text'}]
+
+    assert fragment.query(parser.parse_selector('ul { @id as "id"; li { @id as "id"; text as "value" } }')) == \
+        [{'id': 'list'}, {'id': 'li1', 'value': 'First'}, {'id': 'li2', 'value': 'Second text'}]

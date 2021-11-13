@@ -1,6 +1,8 @@
 import copy
 import re
+from collections import Counter
 import json
+
 import bs4
 from bs4 import BeautifulSoup
 import nltk
@@ -171,8 +173,6 @@ class Fragment:
                 children = [build_subtree(child) for child in node.children]
                 if node.name in ['p', 'div', 'ul', 'ol', 'li', 'table', 'tbody', 'tr', 'br', 'h2', 'h3', 'h4', 'h5']:
                     self._text += "\n"
-                # elif node.name in ['td', 'th']:
-                #     self._text += " "
                 else:
                     pass
 
@@ -224,14 +224,24 @@ def query(subject, selector):
             return [query_value(fragment, selector) for fragment in fragments.items]
 
 def query_value(fragment, selector):
-    return fragment.text
+    return fragment.text.strip()
 
 def flatten(items):
     return [subitem for item in items for subitem in (flatten(item) if isinstance(item, list) else [item])]
 
+def is_mergeable(iter):
+    counter = Counter()
+
+    for item in iter:
+        if not isinstance(item, dict):
+            return false
+        counter.update(item.keys())
+
+    return all(c == 1 for c in counter.values())
+
 def flatten_and_merge(items):
     res = flatten(items)
-    if all(isinstance(item, dict) for item in res):
+    if is_mergeable(res):
         return merge(*res)
     else:
         return res
