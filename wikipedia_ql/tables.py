@@ -14,19 +14,34 @@ def reflow(source_table):
     look_for_columns = True
 
     row_title_size = 0
+    prev_row = None
 
     for row_num, row in enumerate(table.select('tr')):
         cells = []
         if rowspans:
             expanded = [False] * len(rowspans)
 
-        # Drop table header
-        # TODO: NAIVE! and needs tests. And maybe embed in <table> tag as attr?
-        if row_num == 0 and len([*row.select('td,th')]) == 1:
-            continue
+        row_cells = [*row.select('td,th')]
+
+        # TODO: NAIVE!
+        if len(row_cells) == 1:
+            if row_num == 0 and row_cells[0].name == 'th':
+                # Extract table header
+                table['title'] = row_cells[0].text
+                row.extract()
+                continue
+            elif prev_row and row_cells[0].name == 'td':
+                # Consider it "continuation" of a previous row
+                td = row_cells[0]
+                td.extract()
+                if 'colspan' in td.attrs:
+                    del td['colspan']
+                prev_row.append(td)
+                row.extract()
+                continue
 
         # first, reflow possibe col- and row-spans:
-        for cell in row.select('td,th'):
+        for cell in row_cells:
             if rowspans:
                 while len(cells) < len(rowspans) and rowspans[len(cells)]:
                     expanded[len(cells)] = True
@@ -60,11 +75,11 @@ def reflow(source_table):
 
         if look_for_columns and all(cell.name == 'th' for cell in cells):
             if not columns:
-                columns = [soup.new_tag('col', title=(cell.string or '').strip()) for cell in cells]
+                columns = [soup.new_tag('col', title=cell.text.strip()) for cell in cells]
             else:
                 for column, cell, expanded in zip(columns, cells, expanded):
                     if not expanded:
-                        column['title'] = column['title'] + "\n" + (cell.string or '').strip()
+                        column['title'] = column['title'] + "\n" + cell.text.strip()
             row.extract()
         else:
             look_for_columns = False
@@ -72,10 +87,9 @@ def reflow(source_table):
             look_for_title = True
             real_cells = []
             for col_num, (cell, column) in enumerate(zip(cells, columns)):
-                if cell.name == 'th':
-                    if look_for_title:
-                        row_title = row_title + "\n" + cell.string if row_title else cell.string
-                        row_title_size = max(row_title_size, col_num + 1)
+                if look_for_title and cell.name == 'th':
+                    row_title = row_title + "\n" + cell.text if row_title else cell.text
+                    row_title_size = max(row_title_size, col_num + 1)
                 else:
                     look_for_title = False
                     if column:
@@ -88,6 +102,8 @@ def reflow(source_table):
             if row_title:
                 row['title'] = row_title
             row.extend(real_cells)
+
+            prev_row = row
 
     group = soup.new_tag('colgroup')
     # FIXME: Properly handle the fact that every row can have different number of TH! (But how?)

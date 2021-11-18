@@ -171,8 +171,47 @@ def test_multi_col_th():
         </table>
         """)
 
-def test_whole_rows():
+def test_whole_row_header():
+    assert test("""
+        <table>
+            <tr><th colspan="2">table title</th></tr>
+            <tr><th>colA</th><th>colB</th></tr>
+            <tr><td>1.1</td><td>1.2</td></tr>
+            <tr><td>2.1</td><td>2.2</td></tr>
+        </table>
+        """) == h("""
+        <table title="table title">
+            <colgroup>
+                <col title="colA"/>
+                <col title="colB"/>
+            </colgroup>
+            <tr><td column="colA">1.1</td><td column="colB">1.2</td></tr>
+            <tr><td column="colA">2.1</td><td column="colB">2.2</td></tr>
+        </table>
+        """)
+
+def test_whole_row_middle_th():
     pass
+
+def test_whole_row_td():
+    assert test("""
+        <table>
+            <tr><th>colA</th><th>colB</th></tr>
+            <tr><td>1.1</td><td>1.2</td></tr>
+            <tr><td colspan="2">addendum1</td></tr>
+            <tr><td>2.1</td><td>2.2</td></tr>
+            <tr><td colspan="2">addendum2</td></tr>
+        </table>
+        """) == h("""
+        <table>
+            <colgroup>
+                <col title="colA"/>
+                <col title="colB"/>
+            </colgroup>
+            <tr><td column="colA">1.1</td><td column="colB">1.2</td><td>addendum1</td></tr>
+            <tr><td column="colA">2.1</td><td column="colB">2.2</td><td>addendum2</td></tr>
+        </table>
+        """)
 
 # TODO:
 # * th in the middle

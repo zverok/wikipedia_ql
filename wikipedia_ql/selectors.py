@@ -133,11 +133,20 @@ class attr(selector_base):
         return self.attrs['attr_name']
 
     def __call__(self, fragment):
+        value = None
+
         # TODO:
         # * available attr depends on fragment's type
         # * not raise on not found attr
         if fragment.type == 'page':
             value = fragment.metadata.get(self.attr_name)
+        elif self.attr_name.startswith('style-'):
+            style = fragment.soup.get('style')
+            if style:
+                prop = self.attr_name.replace('style-', '')
+                match = re.search(f'{prop}:\\s*(.+?)(;|$)', style)
+                if match:
+                    value = match.group(1)
         else:
             value = fragment.soup.get(self.attr_name)
             if value and (self.attr_name == 'href' or self.attr_name == 'src') and fragment.media_wiki:
