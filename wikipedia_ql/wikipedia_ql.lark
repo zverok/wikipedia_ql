@@ -29,7 +29,7 @@ page_selector: "page"
 text_selector: "text" ( "[" _S* STRING _S* "]" )?
 sentence_selector: "sentence" ("[" _S* STRING _S* "]")?
 
-table_data_selector: "table-data"
+table_data_selector: "table-data" (":force-row-headers(" _S* NUMBER _S* ")")?
 
 section_selector: "section" ( attrib )*
 text_group_selector: "text-group" "[" _S* ( STRING | NUMBER ) _S* "]"

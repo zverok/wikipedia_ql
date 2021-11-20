@@ -2,9 +2,11 @@ import copy
 
 from bs4 import BeautifulSoup
 
-def reflow(source_table):
+def reflow(source_table, *, force_row_headers=None):
     table = copy.copy(source_table)
     # TODO: handle if it is not a table
+    if force_row_headers:
+        force_row_headers = int(force_row_headers)
 
     soup = BeautifulSoup('', 'html.parser')
 
@@ -64,7 +66,6 @@ def reflow(source_table):
         if not rowspans:
             rowspans = [None] * len(cells) # TODO: reliable enough?
 
-
         for col, cell in enumerate(cells):
             if 'rowspan' in cell.attrs:
                 rowspan = int(cell['rowspan']) # TODO: if it is converbible
@@ -84,10 +85,14 @@ def reflow(source_table):
         else:
             look_for_columns = False
             row_title = None
-            look_for_title = True
+            look_for_title = not force_row_headers
             real_cells = []
+            if not columns:
+                columns = [None] * len(cells)
             for col_num, (cell, column) in enumerate(zip(cells, columns)):
-                if look_for_title and cell.name == 'th':
+                is_title = force_row_headers and col_num < force_row_headers or \
+                            look_for_title and cell.name == 'th'
+                if is_title:
                     row_title = row_title + "\n" + cell.text if row_title else cell.text
                     row_title_size = max(row_title_size, col_num + 1)
                 else:
@@ -105,10 +110,11 @@ def reflow(source_table):
 
             prev_row = row
 
-    group = soup.new_tag('colgroup')
-    # FIXME: Properly handle the fact that every row can have different number of TH! (But how?)
-    columns = columns[row_title_size:]
-    group.extend(columns)
-    table.insert(1, group)
+    if columns and not all(c == None for c in columns):
+        group = soup.new_tag('colgroup')
+        # FIXME: Properly handle the fact that every row can have different number of TH! (But how?)
+        columns = columns[row_title_size:]
+        group.extend(columns)
+        table.insert(1, group)
 
     return table

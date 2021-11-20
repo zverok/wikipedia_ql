@@ -167,11 +167,15 @@ class follow_link(selector_base):
         yield from fragment.media_wiki.get_pages(page_names)
 
 class table_data(selector_base):
+    @property
+    def force_row_headers(self):
+        return self.attrs.get('force_row_headers')
+
     def __call__(self, fragment):
         if fragment.type == 'page' or fragment.soup.name != 'table':
             raise ValueError('table-data should be nested in a table directly')
 
-        table = wikipedia_ql.tables.reflow(fragment.soup)
+        table = wikipedia_ql.tables.reflow(fragment.soup, force_row_headers=self.force_row_headers)
         yield fragment.slice_tags([table])
 
 @dataclass
