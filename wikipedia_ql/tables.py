@@ -76,11 +76,11 @@ def reflow(source_table, *, force_row_headers=None):
 
         if look_for_columns and all(cell.name == 'th' for cell in cells):
             if not columns:
-                columns = [soup.new_tag('col', title=cell.text.strip()) for cell in cells]
+                columns = [soup.new_tag('col', title=cell.get_text(" ", strip=True)) for cell in cells]
             else:
                 for column, cell, expanded in zip(columns, cells, expanded):
                     if not expanded:
-                        column['title'] = column['title'] + "\n" + cell.text.strip()
+                        column['title'] = column['title'] + "\n" + cell.get_text(" ", strip=True)
             row.extract()
         else:
             look_for_columns = False
@@ -93,7 +93,10 @@ def reflow(source_table, *, force_row_headers=None):
                 is_title = force_row_headers and col_num < force_row_headers or \
                             look_for_title and cell.name == 'th'
                 if is_title:
-                    row_title = row_title + "\n" + cell.text if row_title else cell.text
+                    if row_title:
+                        row_title = row_title + "\n" + cell.get_text(" ", strip=True)
+                    else:
+                        row_title = cell.get_text(" ", strip=True)
                     row_title_size = max(row_title_size, col_num + 1)
                 else:
                     look_for_title = False

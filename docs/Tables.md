@@ -42,8 +42,7 @@ Will produce the following output:
  {'directors': 'Yes', 'title': 'Cloud Atlas', 'year': '2012'},
  {'directors': 'No', 'title': 'Google Me Love', 'year': '2014'},
  {'directors': 'Yes', 'title': 'Jupiter Ascending', 'year': '2015'},
- {'directors': 'Lana', 'title': 'The Matrix Resurrections', 'year': '2021'},
- {}]
+ {'directors': 'Lana', 'title': 'The Matrix Resurrections', 'year': '2021'}]
 ```
 
 Note that:
@@ -61,7 +60,7 @@ We can parse it as simple as
 wikipedia.query(r'''
 from "Breaking Bad (season 1)" {
     section[heading="Episodes"] >> table >> table-data >> tr {
-        td[column="No. inseason"] as "num";
+        td[column="No. in season"] as "num";
         td[column="Title"] as "title";
         td:last-child as "synopsys"
     }
@@ -86,6 +85,7 @@ from "Breaking Bad (season 1)" {
 Finally, one more trick is implemented to handle edge case I met on some pages (not the last edge case, probably...) like [Bruce Willis filmography](https://en.wikipedia.org/wiki/Bruce_Willis_filmography) (don't ask why I needed that!).
 
 In this table:
+
 ![](./image02.png)
 
 ...logically, row headers are film years, but _physically_, the second column (movie titles) is marked with `th`. To force data being grouped by the first column, we can do this:
