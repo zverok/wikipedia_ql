@@ -234,7 +234,7 @@ def is_mergeable(iter):
 
     for item in iter:
         if not isinstance(item, dict):
-            return false
+            return False
         counter.update(item.keys())
 
     return all(c == 1 for c in counter.values())

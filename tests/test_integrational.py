@@ -85,7 +85,7 @@ def test_follow_links(wiki):
             section[heading="Discography"] {
                 li >> a -> {
                     page@title as "title";
-                    .infobox-image >> img@src as "cover"
+                    .infobox-image:first-of-type >> img@src as "cover"
                 }
             }
         }
