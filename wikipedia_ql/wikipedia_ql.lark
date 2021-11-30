@@ -44,12 +44,13 @@ attrib: "[" _S* IDENT _S* ( ATTR_OP _S* ( IDENT | STRING ) _S* )? "]"
 // pseudo: ":" IDENT ("(" _S* [IDENT _S*]? ")")?
 pseudo: ":" IDENT ("(" _S* (IDENT | NUMBER ) _S* ")")?
 
-ATTR_OP: "=" | INCLUDES | DASHMATCH | ENDSWITH
+ATTR_OP: "=" | INCLUDES | DASHMATCH | ENDSWITH | STARTSWITH
 
 FUNCTION: IDENT "("
 INCLUDES: "~="
 DASHMATCH: "|="
 ENDSWITH: "$="
+STARTSWITH: "^="
 HASH: "#" NAME
 IDENT:   "-"? NMSTART NMCHAR*
 NAME:    NMCHAR+

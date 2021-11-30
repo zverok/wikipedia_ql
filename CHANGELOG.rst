@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.0.4 - 2021-11-30
+------------------
+
+- The **largest highlight** is ``table-data`` quasi-selector/filter, allowing to regularize tables and fetch data by columns/rows. See `Tables.md <https://github.com/zverok/wikipedia_ql/blob/main/docs/Tables.md>`_ for details;
+- Improve results joining to be (a bit) more reasonable and allowing to fetch multiple hashes;
+- Add support for fetching style attributes (naive!) with selectors like ``@style-background``;
+- Support ``$=`` and ``^=`` attribute operators.
+
+
 0.0.3 - 2021-10-08
 ------------------
 

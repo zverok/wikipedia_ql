@@ -41,7 +41,7 @@ print(wikipedia.query(r'''
 
 setuptools.setup(
     name="wikipedia_ql",
-    version="0.0.3",
+    version="0.0.4",
     author="Victor Shepelev",
     author_email="zverok.offline@gmail.com",
     description="Query Language for Wikipedia",
@@ -54,6 +54,7 @@ setuptools.setup(
     install_requires=[
         "requests",
         "lark",
+        "soupsieve>2.3.1",
         "bs4",
         "nltk"
         # "nltk-data"

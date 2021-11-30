@@ -167,7 +167,7 @@ from <source> {
 
 * Singular selectors:
   * [x] regular CSS selectors, like `a` or `table.wikitable`
-    * _Note again, that `selector nested_selector` is **not** supported, so you need to `li { a }` to say "all links inside the list items"_
+    * _Note again, that `selector nested_selector` is **not** supported, so you need to `li { a }` or `li >> a` to say "all links inside the list items"_
   * [ ] `section`
     * [x] `section[heading="Section heading"]`: fetch everything inside section with the specified heading (full heading text must match);
     * [ ] `section`: all sections;
@@ -195,8 +195,8 @@ from <source> {
         * [ ] other
         * [ ] smart fetching metadata
       * [x] as a free-standing selector (`@title` on the top level to fetch "current page's title" instead of `page@title`, and so on)
+  * [x] `table-data` for data tables: `from "Kharkiv" { section[heading="Climate"] >> table >> table-data >> tr[title^="Average high"] >> td[column="Jan"] }`; see [docs](https://github.com/zverok/wikipedia_ql/blob/main/docs/Tables.md)
   * [ ] `infobox` and `infobox-*`: logical selectors for data from infoboxes (formalized data at the top right corner), something like `from "City name" { infobox >> infobox-value[field="Population"] }`
-  * [ ] `wikitable` and `wikitable-*`: same for data tables: `from "City name" { section[heading="Climate"] >> wikitable >> wikitable-row["Average high"] }`
   * [ ] `hatnote` to fetch and process [Hatnotes](https://en.wikipedia.org/wiki/Wikipedia:Hatnote) (special links at the top of the page/section, saying "for more information, see [here]", "this page is about X, if you want Y, go [there]" and so on)
   * [ ] `:has`: like [CSS `:has` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:has) but support all the WikipediaQL selectors, so one might say `from category:"Marvel Cinematic Universe films" { :has(@category*="films") { ...work with pages... } }` to drop from the result-set pages of the [category](https://en.wikipedia.org/wiki/Category:Marvel_Cinematic_Universe_films) which aren't movies.
   * [ ] (?) `:primary` or something like that (maybe `:largest`), to select the most important thing in the scope (for example, `section[heading="Discography"] >> ul:primary` will probably fetch the list of albums, while the section might have other, smaller lists, like the enumeration of studios where recordings were done)
@@ -232,7 +232,6 @@ from <source> {
 
 ## Roadmap
 
-* **0.0.4** tables support
 * **0.0.5** `infobox` and related selectors
 * **0.0.6** more Wikipedia API support (page metadata, page lists etc.)
 * **0.1.0** efficiency & robustness of existing features
