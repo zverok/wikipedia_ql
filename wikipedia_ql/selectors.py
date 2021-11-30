@@ -5,6 +5,8 @@ import soupsieve
 from dataclasses import dataclass, field
 from typing import Any, Union, Dict, List, Optional
 
+import wikipedia_ql.tables
+
 @dataclass
 class selector_base:
     attrs: Dict = field(default_factory=dict)
@@ -131,11 +133,20 @@ class attr(selector_base):
         return self.attrs['attr_name']
 
     def __call__(self, fragment):
+        value = None
+
         # TODO:
         # * available attr depends on fragment's type
         # * not raise on not found attr
         if fragment.type == 'page':
             value = fragment.metadata.get(self.attr_name)
+        elif self.attr_name.startswith('style-'):
+            style = fragment.soup.get('style')
+            if style:
+                prop = self.attr_name.replace('style-', '')
+                match = re.search(f'{prop}:\\s*(.+?)(;|$)', style)
+                if match:
+                    value = match.group(1)
         else:
             value = fragment.soup.get(self.attr_name)
             if value and (self.attr_name == 'href' or self.attr_name == 'src') and fragment.media_wiki:
@@ -154,6 +165,18 @@ class follow_link(selector_base):
         # TODO: Make it async (and have a queue of pages to fetch)?
         page_names = filter(None, [fragment.media_wiki.page_name_from_uri(href) for href in fragment.query('a@href')])
         yield from fragment.media_wiki.get_pages(page_names)
+
+class table_data(selector_base):
+    @property
+    def force_row_headers(self):
+        return self.attrs.get('force_row_headers')
+
+    def __call__(self, fragment):
+        if fragment.type == 'page' or fragment.soup.name != 'table':
+            raise ValueError('table-data should be nested in a table directly')
+
+        table = wikipedia_ql.tables.reflow(fragment.soup, force_row_headers=self.force_row_headers)
+        yield fragment.slice_tags([table])
 
 @dataclass
 class alt:

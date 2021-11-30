@@ -1,6 +1,6 @@
 import pytest
 
-from wikipedia_ql.selectors import text, text_group, sentence, section, css, alt, page, attr
+from wikipedia_ql.selectors import text, text_group, sentence, section, css, alt, page, attr, table_data
 from wikipedia_ql.parser import Parser
 
 @pytest.fixture
@@ -20,6 +20,9 @@ def test_parse_selectors_base(parser):
     assert parser.parse_selector('text-group["good"]') == text_group(group_id='good')
 
     assert parser.parse_selector('page') == page()
+
+    assert parser.parse_selector('table-data') == table_data()
+    assert parser.parse_selector('table-data:force-row-headers(1)') == table_data(force_row_headers=1)
 
 def test_parse_selectors_named(parser):
     assert parser.parse_selector('text["foo"] as "bar"') == text(pattern='foo', name="bar")

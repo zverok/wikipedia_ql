@@ -85,7 +85,7 @@ def test_follow_links(wiki):
             section[heading="Discography"] {
                 li >> a -> {
                     page@title as "title";
-                    .infobox-image >> img@src as "cover"
+                    .infobox-image:first-of-type >> img@src as "cover"
                 }
             }
         }
@@ -116,3 +116,31 @@ def test_follow_links(wiki):
             section[heading="External links"] -> { page@title }
         }
     ''') == ['IMDb', 'AllMovie']
+
+def test_table_filmography(wiki):
+    # assert wiki.query(r'''
+    #     from "Kharkiv" {
+    #         section[heading="Climate"] >> table >> table-data {
+    #             tr[title="Average low °C (°F)"] >> td {
+    #                 @column as "month";
+    #                 text as "temp"
+    #             }
+    #         }
+    #     }
+    # ''') == [
+    # ]
+
+    assert wiki.query(r'''
+        from "The Wachowskis" {
+            section[heading="Films"] >> table >> table-data >> tr {
+                td[column$="directors"] as "directors";
+                td[column="Year"] as "year";
+                td[column="Title"] >> a -> {
+                    @title as "film";
+                    section[heading="Critical response"]
+                        >> sentence["Rotten Tomatoes"]
+                        >> text["\d+%"] as "rotten-tomatoes";
+                }
+            }
+        }
+    ''')

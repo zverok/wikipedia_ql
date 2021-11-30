@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wikipedia_ql"
-version = "0.0.3"
+version = "0.0.4"
 description = "Query Language for Wikipedia"
 authors = ["zverok <zverok.offline@gmail.com>"]
 
@@ -9,6 +9,7 @@ python = "^3.7"
 requests = "^2.25.1"
 lark = "^0.11.3"
 bs4 = "^0.0.1"
+soupsieve = "^2.3.1"
 nltk = "^3.6.2"
 
 [tool.poetry.dev-dependencies]

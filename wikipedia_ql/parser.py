@@ -113,6 +113,12 @@ class Interpreter(lark.visitors.Interpreter):
     def text_group_selector(self, tree):
         return s.text_group(group_id=tree.children[0])
 
+    def table_data_selector(self, tree):
+        if tree.children:
+            return s.table_data(force_row_headers=tree.children[0])
+        else:
+            return s.table_data()
+
     def css_selector(self, tree):
         source = self.query_source[tree.meta.start_pos:tree.meta.end_pos]
         return s.css(css_selector=source)
