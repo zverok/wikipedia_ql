@@ -186,8 +186,8 @@ def test_select_alt():
         ['<a class="first">Link1</a>', '<a class="second">Link2</a>']
 
 def test_select_text_group():
-    def select(fragment, id):
-        return apply(fragment, text_group(group_id=id))
+    def select(fragment, group):
+        return apply(fragment, text_group(group=group))
 
     fragment = make_fragment(
         '<p>Some paragraph with <b>empasis</b> and <a href="#foo">link</a></p>'

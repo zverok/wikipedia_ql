@@ -35,7 +35,11 @@ class ValueTransformer(lark.visitors.Transformer):
 
     def attrib(self, children):
         k, op, v = children
-        return {k: v}
+        return ['attribute', {k: v}]
+
+    def custom_function(self, children):
+        k, v = children
+        return ['function', {k: v}]
 
 class Interpreter(lark.visitors.Interpreter):
     def __init__(self, query_source):
@@ -87,37 +91,39 @@ class Interpreter(lark.visitors.Interpreter):
 
         return sel
 
-    def selectors(self, tree):
+    def selectors_group(self, tree):
         return s.alt(*(self.visit(child) for child in tree.children))
 
-    def page_selector(self, tree):
-        return s.page()
+    def custom_selector(self, tree):
+        kind = str(tree.children[0])
+        attrs = {}
+        functions = {}
+        for type, value in tree.children[1:]:
+            if type == 'function':
+                functions = {**functions, **value}
+            elif type == 'attribute':
+                attrs = {**attrs, **value}
+
+        # FIXME: Obviously, this should be made more orderly (with selector itself keeping track of
+        # what's applicable attributes and functions). Just for transitional period, to make sure
+        # the new syntax works!
+        if kind == 'text':
+            return s.text(pattern=functions.get('matches'))
+        elif kind == 'sentence':
+            return s.sentence(pattern=functions.get('contains'))
+        elif kind == 'section':
+            return s.section(**attrs)
+        elif kind == 'text-group':
+            return s.text_group(**attrs)
+        elif kind == 'page':
+            return s.page(**attrs)
+        elif kind == 'table-data':
+            return s.table_data(force_row_headers=functions.get('force-row-headers'))
+
+        return None
 
     def attribute_selector(self, tree):
         return s.attr(attr_name=tree.children[0])
-
-    def section_selector(self, tree):
-        attrs = {}
-        for c in tree.children:
-            attrs = {**attrs, **c}
-        return s.section(**attrs)
-
-    def sentence_selector(self, tree):
-        pattern = tree.children[0] if tree.children else None
-        return s.sentence(pattern=pattern)
-
-    def text_selector(self, tree):
-        pattern = tree.children[0] if tree.children else None
-        return s.text(pattern=pattern)
-
-    def text_group_selector(self, tree):
-        return s.text_group(group_id=tree.children[0])
-
-    def table_data_selector(self, tree):
-        if tree.children:
-            return s.table_data(force_row_headers=tree.children[0])
-        else:
-            return s.table_data()
 
     def css_selector(self, tree):
         source = self.query_source[tree.meta.start_pos:tree.meta.end_pos]

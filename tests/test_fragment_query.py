@@ -85,8 +85,8 @@ def test_fragment_query_attr_page():
     assert fragment.query(attr(attr_name='title')) == ['Bear']
 
 def test_fragment_query_merging(fragment, parser):
-    assert fragment.query(parser.parse_selector('ul { @id as "id"; li { text as "value" } }')) == \
+    assert fragment.query(parser.parse_selector('ul >> { @id as "id"; li >> { text as "value" } }')) == \
         [{'id': 'list'}, {'value': 'First'}, {'value': 'Second text'}]
 
-    assert fragment.query(parser.parse_selector('ul { @id as "id"; li { @id as "id"; text as "value" } }')) == \
+    assert fragment.query(parser.parse_selector('ul >> { @id as "id"; li >> { @id as "id"; text as "value" } }')) == \
         [{'id': 'list'}, {'id': 'li1', 'value': 'First'}, {'id': 'li2', 'value': 'Second text'}]

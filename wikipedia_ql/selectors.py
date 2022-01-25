@@ -39,8 +39,8 @@ class text(selector_base):
 
 class text_group(selector_base):
     @property
-    def group_id(self):
-        return self.attrs['group_id']
+    def group(self):
+        return self.attrs['group']
 
     def __call__(self, page):
         if not 'text' in page.context:
@@ -48,11 +48,12 @@ class text_group(selector_base):
 
         match = page.context['text']
 
-        if isinstance(self.group_id, int) and len(match.groups()) < self.group_id or \
-            isinstance(self.group_id, str) and not self.group_id in match.groupdict():
+        # TODO: fail if no group id? or just give the first?
+        if isinstance(self.group, int) and len(match.groups()) < self.group or \
+            isinstance(self.group, str) and not self.group in match.groupdict():
             return
 
-        s, e = match.span(self.group_id)
+        s, e = match.span(self.group)
         yield page.slice(s - match.start(), e - match.start())
 
 class sentence(selector_base):

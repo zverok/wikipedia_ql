@@ -9,11 +9,11 @@ def wiki():
 def test_rotten_tomatoes(wiki):
     assert wiki.query(r'''
         from "Nomadland (film)" {
-            section[heading="Critical response"] {
-                sentence["Rotten Tomatoes"] {
-                    text["\d+%"] as "percent";
-                    text["(\d+) (critic|review)"] >> text-group[1] as "reviews";
-                    text["[\d.]+/10"] as "overall"
+            section[heading="Critical response"] >> {
+                sentence:contains("Rotten Tomatoes") >> {
+                    text:match("\d+%") as "percent";
+                    text:match("(\d+) (critic|review)") >> text-group[group=1] as "reviews";
+                    text:match("[\d.]+/10") as "overall"
                 }
             }
         }
@@ -23,7 +23,7 @@ def test_attributes(wiki):
     assert wiki.query(r'''
         from "Bear" {
             section[heading="Feeding"] >> img@src as "image";
-            section[heading="Phylogeny"] >> sentence["clade"] >> a@href
+            section[heading="Phylogeny"] >> sentence:contains("clade") >> a@href
         }
     ''') == [
         {'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Giant_Panda_Tai_Shan.JPG/220px-Giant_Panda_Tai_Shan.JPG'},
@@ -35,8 +35,8 @@ def test_attributes(wiki):
     # Standalone attr & standalone text
     assert wiki.query(r'''
         from "Björk" {
-            section[heading="Discography"] {
-                li >> a {
+            section[heading="Discography"] >> {
+                li >> a >> {
                     text as "title";
                     @href as "link"
                 }
@@ -58,8 +58,8 @@ def test_category(wiki):
     assert wiki.query('''
         from category:"2020s American time travel television series" {
             page@title as "title";
-            section[heading="External links"] {
-              li >> text["^(.+?) at IMDb"] >> text-group[1] >> a@href as "imdb"
+            section[heading="External links"] >> {
+              li >> text:match("^(.+?) at IMDb") >> text-group[group=1] >> a@href as "imdb"
             }
         }
     ''') == [
@@ -82,7 +82,7 @@ def test_category(wiki):
 def test_follow_links(wiki):
     assert wiki.query(r'''
         from "Björk" {
-            section[heading="Discography"] {
+            section[heading="Discography"] >> {
                 li >> a -> {
                     page@title as "title";
                     .infobox-image:first-of-type >> img@src as "cover"
@@ -132,15 +132,33 @@ def test_table_filmography(wiki):
 
     assert wiki.query(r'''
         from "The Wachowskis" {
-            section[heading="Films"] >> table >> table-data >> tr {
+            section[heading="Films"] >> table >> table-data >> tr >> {
                 td[column$="directors"] as "directors";
                 td[column="Year"] as "year";
                 td[column="Title"] >> a -> {
                     @title as "film";
                     section[heading="Critical response"]
-                        >> sentence["Rotten Tomatoes"]
-                        >> text["\d+%"] as "rotten-tomatoes";
+                        >> sentence:contains("Rotten Tomatoes")
+                        >> text:match("\d+%") as "rotten-tomatoes";
                 }
             }
         }
-    ''')
+    ''') == [
+        {'film': 'Assassins (1995 film)', 'year': '1995'},
+        {'film': 'Bound (1996 film)', 'rotten-tomatoes': '89%', 'year': '1996'},
+        {'film': 'The Matrix', 'rotten-tomatoes': '88%', 'year': '1999'},
+        {'film': 'The Matrix Revisited', 'year': '2001'},
+        {'film': 'The Animatrix', 'year': '2003'},
+        {'film': 'The Matrix Reloaded', 'rotten-tomatoes': '73%', 'year': '2003'},
+        {'film': 'The Matrix Revolutions', 'rotten-tomatoes': '35%', 'year': '2003'},
+        {'film': 'V for Vendetta (film)', 'rotten-tomatoes': '73%', 'year': '2005'},
+        {'film': 'The Invasion (film)', 'year': '2007'},
+        {'film': 'Speed Racer (film)', 'rotten-tomatoes': '41%', 'year': '2008'},
+        {'film': 'Ninja Assassin', 'rotten-tomatoes': '26%', 'year': '2009'},
+        {'film': 'Cloud Atlas (film)', 'rotten-tomatoes': '66%', 'year': '2012'},
+        # FIXME: What's this?..
+        {'year': '2014'},
+        {'film': 'Jupiter Ascending', 'rotten-tomatoes': '28%', 'year': '2015'},
+        {'film': 'The Matrix Resurrections', 'rotten-tomatoes': '62%', 'year': '2021'},
+        {},
+    ]

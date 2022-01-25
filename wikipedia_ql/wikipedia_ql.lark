@@ -1,38 +1,30 @@
-query: "from"i _S* source _S* nested_selectors
+query: "from"i _S* source _S* selectors_group
 
 source: ( _source_type ":" )? STRING
 
 _source_type: IDENT
 
-// TODO: Selector-sequence: foo >> bar, foo > bar
+// TODO: closest child: foo > bar
 
-nested_selectors: ("{" _SM* selectors _SM* "}" | _SM* ">>" _SM* selector | _SM* follow_link)
+nested_selectors: (_SM* ">>" _SM* (selector | selectors_group) | _SM* follow_link)
 
-?selectors: selector _S* (";" _SM* selector)* ";" ?
+?selectors_group: "{" _SM* selector _S* (";" _SM* selector)* ";" ?  _SM* "}"
 selector: _selector_expression attribute_selector? as_named? _S* nested_selectors?
 
-follow_link: "->" _SM* nested_selectors
+follow_link: "->" _SM* selectors_group
 
 // TODO: and/or type
 as_named: _S+ "as"i _S+ STRING
 
-_selector_expression: page_selector
-                      | text_selector
-                      | sentence_selector
-                      | section_selector
-                      | text_group_selector
-                      | table_data_selector
+_selector_expression: custom_selector
                       | css_selector
                       | attribute_selector
 
-page_selector: "page"
-text_selector: "text" ( "[" _S* STRING _S* "]" )?
-sentence_selector: "sentence" ("[" _S* STRING _S* "]")?
+custom_selector: WIKIPEDA_QL_SELECTOR_NAME (attrib | custom_function)*
 
-table_data_selector: "table-data" (":force-row-headers(" _S* NUMBER _S* ")")?
+WIKIPEDA_QL_SELECTOR_NAME: "text-group" | "text" | "sentence" | "section" | "page" | "table-data"
 
-section_selector: "section" ( attrib )*
-text_group_selector: "text-group" "[" _S* ( STRING | NUMBER ) _S* "]"
+custom_function: ":" IDENT ("(" _S* ( IDENT | NUMBER | STRING ) _S* ")")?
 
 attribute_selector: "@" IDENT
 
@@ -40,9 +32,8 @@ attribute_selector: "@" IDENT
 css_selector: element_name (HASH | class | attrib | pseudo)* | (HASH | class | attrib | pseudo)+
 element_name: IDENT | "*"
 class: "." IDENT
-attrib: "[" _S* IDENT _S* ( ATTR_OP _S* ( IDENT | STRING ) _S* )? "]"
-// pseudo: ":" IDENT ("(" _S* [IDENT _S*]? ")")?
-pseudo: ":" IDENT ("(" _S* (IDENT | NUMBER ) _S* ")")?
+attrib: "[" _S* IDENT _S* ( ATTR_OP _S* ( IDENT | STRING | NUMBER ) _S* )? "]"
+pseudo: ":" IDENT ("(" _S* ( IDENT | NUMBER ) _S* ")")?
 
 ATTR_OP: "=" | INCLUDES | DASHMATCH | ENDSWITH | STARTSWITH
 
