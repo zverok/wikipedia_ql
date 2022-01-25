@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+
+import wikipedia_ql
+
+if __name__ == '__main__':
+    wikipedia_ql.run()
+

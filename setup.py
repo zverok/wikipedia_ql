@@ -54,7 +54,7 @@ setuptools.setup(
     install_requires=[
         "requests",
         "lark",
-        "soupsieve>2.3.1",
+        "soupsieve>=2.3.1",
         "bs4",
         "nltk"
         # "nltk-data"

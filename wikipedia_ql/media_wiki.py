@@ -40,8 +40,13 @@ class Wikipedia:
 
         self.user_agent = user_agent
 
-    def query(self, query_text):
-        type, page, selector = self.parser.parse(query_text)
+    def query(self, query_text, page=None):
+        if page:
+            type = 'page'
+            selector = self.parser.parse_selector(query_text)
+        else:
+            type, page, selector = self.parser.parse(query_text)
+
         if type == 'page':
             return self.get_page(page).query(selector)
         elif type == 'category':
