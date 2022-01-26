@@ -9,7 +9,7 @@ class Parser:
         # TODO: open_from_package (can't make it work for now?..)
         self.lark = Lark.open(
             Path(__file__).parent / 'wikipedia_ql.lark',
-            start=["query", "selector"],
+            start=["query", "selector", "selectors"],
             propagate_positions=True
         )
 
@@ -19,7 +19,7 @@ class Parser:
         return Interpreter(source).visit(tree)
 
     def parse_selector(self, source):
-        tree = self.lark.parse(source, start="selector")
+        tree = self.lark.parse(source, start="selectors")
         tree = ValueTransformer().transform(tree)
         return Interpreter(source).visit(tree)
 

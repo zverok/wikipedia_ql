@@ -29,7 +29,7 @@ class text(selector_base):
     def re(self):
         pat = self.attrs.get('pattern')
         if pat:
-            return re.compile(pat)
+            return re.compile(pat, re.MULTILINE | re.DOTALL)
 
     def __call__(self, fragment):
         if self.re:

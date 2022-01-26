@@ -6,8 +6,9 @@ _source_type: IDENT
 
 // TODO: closest child: foo > bar
 
-nested_selectors: (_SM* ">>" _SM* (selector | selectors_group) | _SM* follow_link)
+nested_selectors: (_SM* ">>" _SM* selectors | _SM* follow_link)
 
+?selectors: selector | selectors_group
 ?selectors_group: "{" _SM* selector _S* (";" _SM* selector)* ";" ?  _SM* "}"
 selector: _selector_expression attribute_selector? as_named? _S* nested_selectors?
 

@@ -34,7 +34,7 @@ class Wikipedia:
         self.parser = Parser()
         if cache_folder:
             self.cache_folder = Path(cache_folder)
-            self.cache_folder.mkdir(exist_ok=True)
+            self.cache_folder.mkdir(exist_ok=True, parents=True)
         else:
             self.cache_folder = None
 

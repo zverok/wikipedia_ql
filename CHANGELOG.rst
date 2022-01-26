@@ -1,6 +1,19 @@
 Changelog
 =========
 
+0.0.5 - 2022-01-26
+------------------
+
+- Add executable script ``wikipedia_ql`` to run from command-line!
+- Streamline and simplify the language.
+
+  - There is now only one way of nesting: ``selector1 >> selector2``, ``{}`` is left only for grouping purposes;
+  - Follow the CSS selectors intuition: ``text["pattern"]`` is now ``text:matches("pattern")``, ``sentence["pattern"]`` is ``sentence:contains("pattern")``, and ``text-group[1]`` is ``text-group[group=1]``
+
+- A number of internal bugfixes and simplifications
+- The further development is covered in near-the-realtime on my `Substack <https://zverok.substack.com/>`_
+
+
 0.0.4 - 2021-11-30
 ------------------
 

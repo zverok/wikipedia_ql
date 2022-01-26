@@ -17,7 +17,6 @@ def run():
 
     # TODO: cache folder
     # TODO: --time
-    # TODO: -o --output-format
     # TODO: force-cache-update
 
     options, args = parser.parse_args()
@@ -33,6 +32,8 @@ def run():
         result = wikipedia.query(query, page=options.page)
     else:
         result = wikipedia.query(query)
+
+    print()
 
     if options.output_format == 'yaml':
       print(yaml.safe_dump(result, allow_unicode=True))

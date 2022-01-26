@@ -2,40 +2,60 @@
 
 **WikipediaQL** is an _experimental query language_ and Python library for querying structured data from Wikipedia. It looks like this:
 
-```python
-from wikipedia_ql import media_wiki
+```
+$ wikipedia_ql --page "Guardians of the Galaxy (film)" \
+    '{
+      page@title as "title";
+      section[heading="Cast"] as "cast" >> {
+          li >> text:matches("^(.+?) as (.+?):") >> {
+              text-group[group=1] as "actor";
+              text-group[group=2] as "character"
+          }
+      };
+      section[heading="Critical response"] >> {
+          sentence:contains("Rotten Tomatoes") as "RT ratings" >> {
+              text:matches("\d+%") as "percent";
+              text:matches("(\d+) (critic|review)") >> text-group[group=1] as "reviews";
+              text:matches("[\d.]+/10") as "overall"
+          }
+      }
+    }'
 
-wikipedia = media_wiki.Wikipedia()
-
-print(wikipedia.query(r'''
-    from "Guardians of the Galaxy (film)" {
-        page@title as "title";
-        section[heading="Cast"] as "cast" {
-            li >> text["^(.+?) as (.+?):"] {
-                text-group[1] as "actor";
-                text-group[2] as "character"
-            }
-        };
-        section[heading="Critical response"] {
-            sentence["Rotten Tomatoes"] as "RT ratings" {
-                text["\d+%"] as "percent";
-                text["(\d+) (critic|review)"] >> text-group[1] as "reviews";
-                text["[\d.]+/10"] as "overall"
-            }
-        }
-    }
-'''))
-
-# {
-#     'title': 'Guardians of the Galaxy (film)',
-#     'cast': [{'actor': 'Chris Pratt', 'character': 'Peter Quill / Star-Lord'}, {'actor': 'Zoe Saldana', 'character': 'Gamora'}, {'actor': 'Dave Bautista', 'character': 'Drax the Destroyer'}, {'actor': 'Vin Diesel', 'character': 'Groot'}, {'actor': 'Bradley Cooper', 'character': 'Rocket'}, {'actor': 'Lee Pace', 'character': 'Ronan the Accuser'}, {'actor': 'Michael Rooker', 'character': 'Yondu Udonta'}, {'actor': 'Karen Gillan', 'character': 'Nebula'}, {'actor': 'Djimon Hounsou', 'character': 'Korath'}, {'actor': 'John C. Reilly', 'character': 'Rhomann Dey'}, {'actor': 'Glenn Close', 'character': 'Irani Rael'}, {'actor': 'Benicio del Toro', 'character': 'Taneleer Tivan / The Collector'}],
-#     'RT ratings': {'percent': '92%', 'reviews': '328', 'overall': '7.82/10'}
-# }
+RT ratings:
+  overall: 7.8/10
+  percent: 92%
+  reviews: '334'
+cast:
+- actor: Chris Pratt
+  character: Peter Quill / Star-Lord
+- actor: Zoe Saldaña
+  character: Gamora
+- actor: Dave Bautista
+  character: Drax the Destroyer
+- actor: Vin Diesel
+  character: Groot
+- actor: Bradley Cooper
+  character: Rocket CREDITED ONLY AS "Rocket" PER OFFICIAL SYNOPSIS!
+- actor: Lee Pace
+  character: Ronan the Accuser
+- actor: Michael Rooker
+  character: Yondu Udonta
+- actor: Karen Gillan
+  character: Nebula
+- actor: Djimon Hounsou
+  character: Korath
+- actor: John C. Reilly
+  character: Rhomann Dey
+- actor: Glenn Close
+  character: Irani Rael
+- actor: Benicio del Toro
+  character: Taneleer Tivan / The Collector
+title: Guardians of the Galaxy (film)
 ```
 
 ### How?
 
-WikipediaQL-the-library does roughly this:
+WikipediaQL-the-tool does roughly this:
 
 * Parses query in WikipediaQL-the-language;
 * Uses [MediaWiki API](https://en.wikipedia.org/w/api.php) to fetch pages' metadata;
@@ -54,6 +74,14 @@ _See [FAQ](#faq) below for justifications of parsing Wikipedia instead of just u
 
 `$ pip install wikipedia_ql`
 
+```
+$ wikipedia_ql --page "Page name" query_text
+# or
+$ wikipedia_ql query_text_with_page
+```
+
+Usage as Python library:
+
 ```python
 from wikipedia_ql import media_wiki
 
@@ -62,12 +90,14 @@ wikipedia = media_wiki.Wikipedia()
 data = wikipedia.query(query_text)
 ```
 
-Each WikipediaQL query looks like this:
+Full WikipediaQL query looks like this:
 ```
 from <source> {
   <selectors>
 }
 ```
+
+When using `--page` parameter to the executable, you need only to pass selectors in the query text.
 
 _Source_ is Wikipedia article name, or category name, or (in the future) other ways of specifying multiple pages. _Selectors_ are similar to CSS; they are nested in one another with `selector { other; selectors }`, or (shortcut) `selector >> other_selector`. All terminal selectors (e.g., doesn't having others nested) produce values in the output; the value can be associated with a name with `as "valuename"`.
 
@@ -77,28 +107,31 @@ See below for a list of selectors and sources currently supported and the future
 
 Simple query for some info from the page:
 
-```python
-wikipedia.query(r'''
-from "Pink Floyd" {
-    section[heading="Discography"] >> li {
+```
+$ wikipedia_ql --page "Pink Floyd" \
+    'section[heading="Discography"] >> li >> {
         a as "title";
-        text["\((.+)\)"] >> text-group[1] as "year";
-    }
-}
-''')
-# => [{'title': 'The Piper at the Gates of Dawn', 'year': '1967'},
-#     {'title': 'A Saucerful of Secrets', 'year': '1968'},
-#     {'title': 'More', 'year': '1969'},
+        text:matches("\((.+)\)") >> text-group[group=1] as "year";
+    }'
+
+- title: The Piper at the Gates of Dawn
+  year: '1967'
+- title: A Saucerful of Secrets
+  year: '1968'
+- title: More
+  year: '1969'
+- title: Ummagumma
+  year: '1969'
 #     ...and so on...
 ```
 
-Multi-page query from pages of some category:
+Multi-page query from pages of some category (only from inside Python):
 ```python
 query = r'''
 from category:"2020s American time travel television series" {
     page@title as "title";
-    section[heading="External links"] {
-      li >> text["^(.+?) at IMDb"] >> text-group[1] >> a@href as "imdb"
+    section[heading="External links"] >> {
+      li >> text:matches("^(.+?) at IMDb") >> text-group[group=1] >> a@href as "imdb"
     }
 }
 '''
@@ -113,24 +146,20 @@ for row in wikipedia.iquery(query):
 ```
 
 Navigating through pages in one query (note the `->` which means "perform subquery in the page by link"):
-```python
-wikipedia.query(r'''
-    from "Björk" {
-        section[heading="Discography"] {
-            li >> a -> {
-                page@title as "title";
-                .infobox-image >> img >> @src as "cover"
-            }
-        }
-    }
-''')
-# [{'cover': 'https://upload.wikimedia.org/wikipedia/en/thumb/7/77/Bj%C3%B6rk-Debut-1993.png/220px-Bj%C3%B6rk-Debut-1993.png',
-#   'title': 'Debut (Björk album)'},
-#  {'cover': 'https://upload.wikimedia.org/wikipedia/en/thumb/3/3f/Bjork_Post.png/220px-Bjork_Post.png',
-#   'title': 'Post (Björk album)'},
-#  {'cover': 'https://upload.wikimedia.org/wikipedia/en/thumb/a/af/Bj%C3%B6rk_-_Homogenic.png/220px-Bj%C3%B6rk_-_Homogenic.png',
-#   'title': 'Homogenic'},
-#  ...
+```
+$ wikipedia_ql --page Björk \
+    'section[heading="Discography"] >> li >> a -> {
+        page@title as "title";
+        .infobox-image >> img >> @src as "cover"
+    }'
+
+- cover: https://upload.wikimedia.org/wikipedia/en/thumb/7/77/Bj%C3%B6rk-Debut-1993.png/220px-Bj%C3%B6rk-Debut-1993.png
+  title: Debut (Björk album)
+- cover: https://upload.wikimedia.org/wikipedia/en/thumb/3/3f/Bjork_Post.png/220px-Bjork_Post.png
+  title: Post (Björk album)
+- cover: https://upload.wikimedia.org/wikipedia/en/thumb/a/af/Bj%C3%B6rk_-_Homogenic.png/220px-Bj%C3%B6rk_-_Homogenic.png
+  title: Homogenic
+...
 ```
 
 As the page source should be fetched from Wikipedia every time, and it can be a major slowdown when experimenting, `wikipedia_ql` implements super-naive caching:
@@ -163,27 +192,28 @@ from <source> {
 * [ ] `search:"Search string"`
   * _Maybe several search types, as Wikipedia has several search APIs_
 
-**Selectors** are CSS-alike selectors, `type.class[attr="value"][otherattr="othervalue"]`. Note, that **unlike CSS**, nesting (any `child` inside `parent`) is performed not with spaces (`parent child`), but with `parent >> child` or `parent { child }`.
+**Selectors** are CSS-alike selectors, `type.class[attr="value"][otherattr="othervalue"]`. Note, that **unlike CSS**, nesting (any `child` inside `parent`) is performed not with spaces (`parent child`), but with `parent >> child`.
 
 * Singular selectors:
   * [x] regular CSS selectors, like `a` or `table.wikitable`
-    * _Note again, that `selector nested_selector` is **not** supported, so you need to `li { a }` or `li >> a` to say "all links inside the list items"_
+    * _Note again, that `selector nested_selector` is **not** supported, so you need to `li >> a` to say "all links inside the list items"_
   * [ ] `section`
     * [x] `section[heading="Section heading"]`: fetch everything inside section with the specified heading (full heading text must match);
     * [ ] `section`: all sections;
     * [ ] `section[level=3]`: all sections of particular level
     * [ ] more powerful `heading` value patterns would be supported (probably in CSS-alike manner: `heading^="Starts from"` and so on)
   * [ ] `text`
-    * [x] `text["pattern"]`: part of the document matching pattern (Python's regexp); document's structure would be preserved, so you can nest CSS and other WikipediaQL selectors inside: `li >> text["^(.+?) as"] { a@href as "link" }`
+    * [x] `text:matches("pattern")`: part of the document matching pattern (Python's regexp); document's structure would be preserved, so you can nest CSS and other WikipediaQL selectors inside: `li >> text:matches("^(.+?) as") >> a@href as "link"`
     * [x] `text`: without pattern specification, just selects the entire text of the parent element;
-    * [ ] pattern flags, like `text["pattern"i]` (case-insensitive)
+    * [ ] pattern flags, like `text:imatches("pattern")` (case-insensitive)
     * [ ] handle inline images `alt` attribute as text
-  * [ ] `text-group`: should be directly nested in `text` pattern, refers to capture a group of the regexp; see the first example in the README;
-    * [x] `text-group[1]`: group by number
-    * [x] `text-group["name"]`: named groups
+  * [x] `text-group`: should be directly nested in `text` pattern, refers to capture a group of the regexp; see the first example in the README;
+    * [x] `text-group[group=1]`: group by number
+    * [x] `text-group[group="name"]`: named groups
   * [ ] `sentence`
-    * [x] `sentence["pattern"]`: find sentence where pattern matches (whole sentence is selected)
+    * [x] `sentence:contains("pattern")`: find sentence where pattern matches (whole sentence is selected)
     * [x] `sentence`: all sentences in the scope
+    * [ ] `sentence:first` and other CSS pseudo-selectors should work
     * [ ] pattern flags (same as for text)
     * [ ] _more suitable sentence tokenizer will be used, probably: currently we are relying on nltk, which is too powerful (and large dependency) for our simplistic needs_
   * [x] `page`: refers (from any scope) to the entire current page; useful for re-nesting fetched data in a logical way and to include metadata attributes in output (see below)
@@ -202,7 +232,7 @@ from <source> {
   * [ ] (?) `:primary` or something like that (maybe `:largest`), to select the most important thing in the scope (for example, `section[heading="Discography"] >> ul:primary` will probably fetch the list of albums, while the section might have other, smaller lists, like the enumeration of studios where recordings were done)
   * _TBC on "as-good-examples-found" basis_
 * Selector operations:
-  * [x] sequence: `parent { children }` or `parent >> child`
+  * [x] sequence: `parent >> child`
   * [x] group: `{ selector1; selector2; selector3 }` fetch all the selectors in the result set
   * [ ] immediate child: `parent > child`; maybe (come good reasons) other CSS relations like `sibling1 + sibling2`
   * [x] **follow link**: `section["Discography"] >> li >> a -> { selectors working inside the fetched page }`, to allow expressing page navigation in a singular query

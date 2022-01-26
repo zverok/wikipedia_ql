@@ -167,7 +167,7 @@ class Fragment:
         def build_subtree(node):
             start = len(self._text)
             if isinstance(node, bs4.element.NavigableString):
-                self._text += str(node)
+                self._text += str(node).replace('\xa0', ' ')
                 children = []
             else:
                 children = [build_subtree(child) for child in node.children]

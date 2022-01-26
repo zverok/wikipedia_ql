@@ -11,9 +11,9 @@ def test_rotten_tomatoes(wiki):
         from "Nomadland (film)" {
             section[heading="Critical response"] >> {
                 sentence:contains("Rotten Tomatoes") >> {
-                    text:match("\d+%") as "percent";
-                    text:match("(\d+) (critic|review)") >> text-group[group=1] as "reviews";
-                    text:match("[\d.]+/10") as "overall"
+                    text:matches("\d+%") as "percent";
+                    text:matches("(\d+) (critic|reviews)") >> text-group[group=1] as "reviews";
+                    text:matches("[\d.]+/10") as "overall"
                 }
             }
         }
@@ -59,7 +59,7 @@ def test_category(wiki):
         from category:"2020s American time travel television series" {
             page@title as "title";
             section[heading="External links"] >> {
-              li >> text:match("^(.+?) at IMDb") >> text-group[group=1] >> a@href as "imdb"
+              li >> text:matches("^(.+?) at IMDb") >> text-group[group=1] >> a@href as "imdb"
             }
         }
     ''') == [
@@ -139,7 +139,7 @@ def test_table_filmography(wiki):
                     @title as "film";
                     section[heading="Critical response"]
                         >> sentence:contains("Rotten Tomatoes")
-                        >> text:match("\d+%") as "rotten-tomatoes";
+                        >> text:matches("\d+%") as "rotten-tomatoes";
                 }
             }
         }

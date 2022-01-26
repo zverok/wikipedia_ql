@@ -3,37 +3,38 @@ import setuptools
 long_description = r"""
 # WikipediaQL: querying structured data from Wikipedia
 
-**WikipediaQL** is an _experimental query language_ and Python library for querying structured data from Wikipedia. It looks like this:
+**WikipediaQL** is an _experimental query language_ and, executable script, and Python library for querying structured data from Wikipedia. It looks like this:
 
-```python
-from wikipedia_ql import media_wiki
+```
+$ wikipedia_ql --page "Guardians of the Galaxy (film)" \
+    '{
+      page@title as "title";
+      section[heading="Cast"] as "cast" >> {
+          li >> text:matches("^(.+?) as (.+?):") >> {
+              text-group[group=1] as "actor";
+              text-group[group=2] as "character"
+          }
+      };
+      section[heading="Critical response"] >> {
+          sentence:contains("Rotten Tomatoes") as "RT ratings" >> {
+              text:matches("\d+%") as "percent";
+              text:matches("(\d+) (critic|review)") >> text-group[group=1] as "reviews";
+              text:matches("[\d.]+/10") as "overall"
+          }
+      }
+    }'
 
-wikipedia = media_wiki.Wikipedia()
-
-print(wikipedia.query(r'''
-    from "Guardians of the Galaxy (film)" {
-        page@title as "title";
-        section[heading="Cast"] as "cast" {
-            li >> text["^(.+?) as (.+?):"] {
-                text-group[1] as "actor";
-                text-group[2] as "character"
-            }
-        };
-        section[heading="Critical response"] {
-            sentence["Rotten Tomatoes"] as "RT ratings" {
-                text["\d+%"] as "percent";
-                text["(\d+) (critic|review)"] >> text-group[1] as "reviews";
-                text["[\d.]+/10"] as "overall"
-            }
-        }
-    }
-'''))
-
-# {
-#     'title': 'Guardians of the Galaxy (film)',
-#     'cast': [{'actor': 'Chris Pratt', 'character': 'Peter Quill / Star-Lord'}, {'actor': 'Zoe Saldana', 'character': 'Gamora'}, {'actor': 'Dave Bautista', 'character': 'Drax the Destroyer'}, {'actor': 'Vin Diesel', 'character': 'Groot'}, {'actor': 'Bradley Cooper', 'character': 'Rocket'}, {'actor': 'Lee Pace', 'character': 'Ronan the Accuser'}, {'actor': 'Michael Rooker', 'character': 'Yondu Udonta'}, {'actor': 'Karen Gillan', 'character': 'Nebula'}, {'actor': 'Djimon Hounsou', 'character': 'Korath'}, {'actor': 'John C. Reilly', 'character': 'Rhomann Dey'}, {'actor': 'Glenn Close', 'character': 'Irani Rael'}, {'actor': 'Benicio del Toro', 'character': 'Taneleer Tivan / The Collector'}],
-#     'RT ratings': {'percent': '92%', 'reviews': '328', 'overall': '7.82/10'}
-# }
+title: Guardians of the Galaxy (film)
+RT ratings:
+  overall: 7.8/10
+  percent: 92%
+  reviews: '334'
+cast:
+- actor: Chris Pratt
+  character: Peter Quill / Star-Lord
+- actor: Zoe Saldaña
+  character: Gamora
+...
 ```
 
 [Read full README.md on GitHub](https://github.com/zverok/wikipedia_ql)
@@ -41,7 +42,7 @@ print(wikipedia.query(r'''
 
 setuptools.setup(
     name="wikipedia_ql",
-    version="0.0.4",
+    version="0.0.5",
     author="Victor Shepelev",
     author_email="zverok.offline@gmail.com",
     description="Query Language for Wikipedia",
@@ -56,9 +57,11 @@ setuptools.setup(
         "lark",
         "soupsieve>=2.3.1",
         "bs4",
-        "nltk"
+        "nltk",
+        "pyaml",
         # "nltk-data"
     ],
+    scripts=["bin/wikipedia_ql"],
     classifiers=[
         "Development Status :: 3 - Alpha",
 
