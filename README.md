@@ -62,7 +62,17 @@ WikipediaQL-the-tool does roughly this:
 * Uses [Parsoid API](https://www.mediawiki.org/wiki/Parsoid/API) to fetch each page's content semantic HTML;
 * Applies selectors from the query to page to extract structured data.
 
+**The WikipediaQL development is covered in ongoing series of articles:** (newest first)
+
+* Jan'22: [Wikipedia and irregular data: how much can you fetch in one expression?](https://zverok.substack.com/p/wikipedia-and-irregular-data-how)
+* Dec'21: [Wikipedia as the data source: taming the irregular](https://zverok.substack.com/p/wikipediaql-1)
+* Oct'21: [Why Wikipedia matters, and how to make sense of it (programmatically)](https://zverok.substack.com/p/wikipedia)
+
+[Subscribe to follow](https://zverok.substack.com/)
+
 ### Why?
+
+> “Sometimes magic is just someone spending more time on something than anyone else might reasonably expect.” — Raymond Joseph Teller
 
 Wikipedia is the most important open knowledge project: basically, the "table of contents" of all the human data. While it might be incomplete or misleading in details, the amount of data is incredible, and its organization makes all the data accessible to humans.
 
