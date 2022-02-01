@@ -13,21 +13,24 @@ class selector_base:
     name: Optional[str] = None
     nested: Optional[Union['selector_base', 'alt']] = None
 
-    def __init__(self, *, nested=None, name=None, **attrs):
+    def __init__(self, *, nested=None, name=None, attrs={}, functions={}):
         self.nested = nested
         self.name = name
 
-        self.attrs = {key: val for key, val in attrs.items() if val != None}
+        self.attrs = attrs
+        self.functions = functions
 
     def __repr__(self):
-        return type(self).__name__ + ''.join(f'[{name}={value!r}]' for name, value in self.attrs.items()) + \
+        return type(self).__name__ + \
+            ''.join(f'[{name}={value!r}]' for name, value in self.attrs.items()) + \
+            ''.join(f':{name}({value!r})' for name, value in self.functions.items()) + \
             (f' as {self.name!r}' if self.name else '') + \
-            (f' {{ {self.nested!r} }}' if self.nested else '')
+            (f' >> {self.nested!r}' if self.nested else '')
 
 class text(selector_base):
     @property
     def re(self):
-        pat = self.attrs.get('pattern')
+        pat = self.functions.get('matches')
         if pat:
             return re.compile(pat, re.MULTILINE | re.DOTALL)
 
@@ -59,31 +62,40 @@ class text_group(selector_base):
 class sentence(selector_base):
     @property
     def re(self):
-        pat = self.attrs.get('pattern')
+        pat = self.functions.get('contains')
         if pat:
             return re.compile(pat)
 
     def __call__(self, fragment):
         yield from (
             fragment.slice(start, end)
-            for (text, start, end) in fragment.sentences
-            if not self.re or self.re.search(text)
+            for (idx, (text, start, end)) in enumerate(fragment.sentences)
+            if self.matches(text, idx)
         )
+
+    def matches(self, text, idx):
+        res = True
+        if self.re:
+            res = res and self.re.search(text)
+        # TODO: custom index and last
+        # TODO: generalize to all
+        if self.functions.get('first') == True:
+            res = res and idx == 0
+
+        return res
 
 class section(selector_base):
     @property
     def heading(self):
-        return self.attrs['heading']
+        return self.attrs.get('heading')
 
     # TODO: Level as an optional filter; No filters at all (select all sections)
     def __call__(self, fragment):
-        for section in fragment.soup.select('section'):
-            # TODO: allow to fetch first section by special id, like /intro or something
-            if section.get('data-mw-section-id') == '0':
-                continue
-
+        for idx, section in enumerate(fragment.soup.select('section')):
             heading = section.select_one('h2, h3, h4')
-            if self.heading in heading.get_text():
+            # TODO: generalize :first
+            if (not self.heading or heading and self.heading in heading.get_text()) and \
+               (not self.functions.get('first') or idx==0):
                 yield fragment.slice_tags([*section.children])
 
     # This is more generic section fetching algo (relying on Wikipedia page structure with just hX at top level);
@@ -182,6 +194,8 @@ class table_data(selector_base):
 @dataclass
 class alt:
     selectors: List[Union['selector_base', 'alt']]
+    # To correspond to other selectors' attributes
+    nested=None
 
     def __init__(self, *selectors):
         self.selectors = selectors
@@ -190,4 +204,4 @@ class alt:
         yield from (fragment for selector in self.selectors for fragment in selector(page))
 
     def __repr__(self):
-        return '; '.join(sel.__repr__() for sel in self.selectors)
+        return '{ ' + '; '.join(sel.__repr__() for sel in self.selectors) + ' }'

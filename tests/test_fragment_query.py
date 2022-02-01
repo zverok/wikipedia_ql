@@ -27,66 +27,54 @@ def fragment():
         </section>
         """)
 
-@pytest.fixture
-def parser():
-    return Parser()
+def sel(text):
+    return Parser().parse_selector(text)
 
 def test_fragment_query_simple(fragment):
-    assert fragment.query(text(pattern='Fi.{3}')) == ['First']
+    assert fragment.query(sel('text:matches("Fi.{3}")')) == ['First']
 
 def test_fragment_query_alt(fragment):
-    assert fragment.query(alt(css(css_selector='a.second'), text(pattern='Fi.{3}'))) == ['Second', 'First']
+    assert fragment.query(sel('{ a.second; text:matches("Fi.{3}") }')) == ['Second', 'First']
 
 def test_fragment_query_nested(fragment):
-    assert fragment.query(
-        section(heading='Section2',
-            nested=css(css_selector='b', nested=text(pattern=r'Text\d'))
-        )
-    ) == ['Text2']
+    assert fragment.query(sel(r'section[heading="Section2"] >> b >> text:matches("Text\d")')) == ['Text2']
 
-    assert fragment.query(
-        section(heading='Section2',
-            nested=css(css_selector='b', nested=text())
-        )
-    ) == ['Text2']
+    assert fragment.query(sel(r'section[heading="Section2"] >> b >> text')) == ['Text2']
 
-    assert fragment.query(
-        text(pattern='Second text', nested=text(pattern='t.{3}'))
-    ) == ['text']
+    assert fragment.query(sel('text:matches("Second text") >> text:matches("t.{3}")')) == ['text']
 
-    assert fragment.query(
-        section(heading='Section2', nested=text()) # Text of the entire fragment
-    ) == ["Section2\n\nText2 Text3"]
+    # Text of the entire fragment
+    assert fragment.query(sel(r'section[heading="Section2"] >> text')) == ["Section2\n\nText2 Text3"]
 
 def test_fragment_query_named(fragment):
-    assert fragment.query(text(pattern='Fi.{3}', name='f')) == [{'f': 'First'}]
+    assert fragment.query(sel('text:matches("Fi.{3}") as "f"')) == [{'f': 'First'}]
 
-    assert fragment.query(alt(css(css_selector='a.second', name='a'), text(pattern='Fi.{3}', name='b'))) == \
+    assert fragment.query(sel('{ a.second as "a"; text:matches("Fi.{3}") as "b" }')) == \
         {'a': 'Second', 'b': 'First'}
 
-    # section[heading=Section1] as "section" > ul as "list" > a as "link"
+    #
     assert fragment.query(
-        section(heading='Section1', nested=css(css_selector='ul', nested=css(css_selector='a', name='link'), name='list'), name='section')
+        sel('section[heading="Section1"] as "section" >> ul as "list" >> a as "link"')
     ) == [{'section': [{'list': [{'link': 'First'}, {'link': 'Second'}]}]}]
 
-    assert fragment.query(
-        section(heading='Section1', nested=css(css_selector='ul', nested=css(css_selector='a')), name='section')
-    ) == [{'section': ['First', 'Second']}]
+    assert fragment.query(sel('section[heading="Section1"] as "section" >> ul >> a')) == \
+        [{'section': ['First', 'Second']}]
 
 def test_fragment_query_attr(fragment):
-    assert fragment.query(css(css_selector='a.second', nested=attr(attr_name='href'))) == ['http://google.com']
-    assert fragment.query(css(css_selector='a.second', nested=attr(attr_name='href', name='foo'))) == [{'foo': 'http://google.com'}]
+    assert fragment.query(sel('a.second@href')) == ['http://google.com']
+    assert fragment.query(sel('a.second@href as "foo"')) == [{'foo': 'http://google.com'}]
 
-    assert fragment.query(css(css_selector='a.second', nested=attr(attr_name='nonexistent', name='foo'))) == []
+    assert fragment.query(sel('a.second@nonexistent as "foo"')) == []
 
 def test_fragment_query_attr_page():
     fragment = make_fragment('', metadata={'title': 'Bear'})
 
-    assert fragment.query(attr(attr_name='title')) == ['Bear']
+    assert fragment.query(sel('@title')) == ['Bear']
 
-def test_fragment_query_merging(fragment, parser):
-    assert fragment.query(parser.parse_selector('ul >> { @id as "id"; li >> { text as "value" } }')) == \
+def test_fragment_query_merging(fragment):
+    assert fragment.query(sel('ul >> { @id as "id"; li >> { text as "value" } }')) == \
         [{'id': 'list'}, {'value': 'First'}, {'value': 'Second text'}]
 
-    assert fragment.query(parser.parse_selector('ul >> { @id as "id"; li >> { @id as "id"; text as "value" } }')) == \
+    assert fragment.query(sel('ul >> { @id as "id"; li >> { @id as "id"; text as "value" } }')) == \
         [{'id': 'list'}, {'id': 'li1', 'value': 'First'}, {'id': 'li2', 'value': 'Second text'}]
+

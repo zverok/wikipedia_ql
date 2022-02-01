@@ -27,8 +27,8 @@ class ValueTransformer(lark.visitors.Transformer):
     def STRING(self, val):
         return val[1:-1]
 
-    def NUMBER(self, children):
-        return int(children[0])
+    def NUMBER(self, val):
+        return int(val)
 
     def IDENT(self, val):
         return str(val)
@@ -38,7 +38,11 @@ class ValueTransformer(lark.visitors.Transformer):
         return ['attribute', {k: v}]
 
     def custom_function(self, children):
-        k, v = children
+        if len(children) > 1:
+            k, v = children
+        else:
+            k = children[0]
+            v = True
         return ['function', {k: v}]
 
 class Interpreter(lark.visitors.Interpreter):
@@ -95,7 +99,7 @@ class Interpreter(lark.visitors.Interpreter):
         return s.alt(*(self.visit(child) for child in tree.children))
 
     def custom_selector(self, tree):
-        kind = str(tree.children[0])
+        kind = str(tree.children[0]).replace('-', '_')
         attrs = {}
         functions = {}
         for type, value in tree.children[1:]:
@@ -104,30 +108,17 @@ class Interpreter(lark.visitors.Interpreter):
             elif type == 'attribute':
                 attrs = {**attrs, **value}
 
-        # FIXME: Obviously, this should be made more orderly (with selector itself keeping track of
-        # what's applicable attributes and functions). Just for transitional period, to make sure
-        # the new syntax works!
-        if kind == 'text':
-            return s.text(pattern=functions.get('matches'))
-        elif kind == 'sentence':
-            return s.sentence(pattern=functions.get('contains'))
-        elif kind == 'section':
-            return s.section(**attrs)
-        elif kind == 'text-group':
-            return s.text_group(**attrs)
-        elif kind == 'page':
-            return s.page(**attrs)
-        elif kind == 'table-data':
-            return s.table_data(force_row_headers=functions.get('force-row-headers'))
+        if not hasattr(s, kind):
+            raise ValueError(f'Unrecognized selector {kind}')
 
-        return None
+        return getattr(s, kind)(attrs=attrs, functions=functions)
 
     def attribute_selector(self, tree):
-        return s.attr(attr_name=tree.children[0])
+        return s.attr(attrs={'attr_name': tree.children[0]})
 
     def css_selector(self, tree):
         source = self.query_source[tree.meta.start_pos:tree.meta.end_pos]
-        return s.css(css_selector=source)
+        return s.css(attrs={'css_selector': source})
 
     def follow_link(self, tree):
         return s.follow_link(nested=self.visit(tree.children[0]))

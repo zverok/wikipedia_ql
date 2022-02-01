@@ -209,6 +209,7 @@ from <source> {
     * _Note again, that `selector nested_selector` is **not** supported, so you need to `li >> a` to say "all links inside the list items"_
   * [ ] `section`
     * [x] `section[heading="Section heading"]`: fetch everything inside section with the specified heading (full heading text must match);
+    * [x] `section:first` (useful to fetch article intro)
     * [ ] `section`: all sections;
     * [ ] `section[level=3]`: all sections of particular level
     * [ ] more powerful `heading` value patterns would be supported (probably in CSS-alike manner: `heading^="Starts from"` and so on)
@@ -223,7 +224,8 @@ from <source> {
   * [ ] `sentence`
     * [x] `sentence:contains("pattern")`: find sentence where pattern matches (whole sentence is selected)
     * [x] `sentence`: all sentences in the scope
-    * [ ] `sentence:first` and other CSS pseudo-selectors should work
+    * [x] `sentence:first`
+    * [ ] other CSS pseudo-selectors for `sentence`
     * [ ] pattern flags (same as for text)
     * [ ] _more suitable sentence tokenizer will be used, probably: currently we are relying on nltk, which is too powerful (and large dependency) for our simplistic needs_
   * [x] `page`: refers (from any scope) to the entire current page; useful for re-nesting fetched data in a logical way and to include metadata attributes in output (see below)

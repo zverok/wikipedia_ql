@@ -1,6 +1,12 @@
 Changelog
 =========
 
+master - unreleased
+-------------------
+
+- (internal) restructure custom WikipediaQL selectors internally into having "attrs" and "functions" (CSS pseudo-selectors), paving the way for more consistency;
+- add ``sentence:first`` and ``section:first`` functions;
+
 0.0.5 - 2022-01-26
 ------------------
 
