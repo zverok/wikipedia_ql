@@ -182,7 +182,7 @@ class follow_link(selector_base):
 class table_data(selector_base):
     @property
     def force_row_headers(self):
-        return self.attrs.get('force_row_headers')
+        return self.functions.get('force-row-headers')
 
     def __call__(self, fragment):
         if fragment.type == 'page' or fragment.soup.name != 'table':

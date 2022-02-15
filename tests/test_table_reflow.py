@@ -101,15 +101,15 @@ def test_rowspan_td():
 def test_span_complex():
     assert reflow_test("""
         <table>
-            <tr><th></th><th>col1</th><th>col2</th></tr>
-            <tr><th>row1</th><td rowspan="2" colspan="2">1-2.1-2</td></tr>
-            <tr><th>row2</th></tr>
+            <tr><th></th><th>col1</th><th>col2</th><th>col3</th></tr>
+            <tr><th>row1</th><td rowspan="2" colspan="2">1-2.1-2</td><td>1.3</td></tr>
+            <tr><th>row2</th><td>2.3</td></tr>
         </table>
         """) == h("""
         <table>
-            <colgroup><col title="col1"/><col title="col2"/></colgroup>
-            <tr title="row1"><td column="col1" row="row1">1-2.1-2</td><td column="col2" row="row1">1-2.1-2</td></tr>
-            <tr title="row2"><td column="col1" row="row2">1-2.1-2</td><td column="col2" row="row2">1-2.1-2</td></tr>
+            <colgroup><col title="col1"/><col title="col2"/><col title="col3"/></colgroup>
+            <tr title="row1"><td column="col1" row="row1">1-2.1-2</td><td column="col2" row="row1">1-2.1-2</td><td column="col3" row="row1">1.3</td></tr>
+            <tr title="row2"><td column="col1" row="row2">1-2.1-2</td><td column="col2" row="row2">1-2.1-2</td><td column="col3" row="row2">2.3</td></tr>
         </table>
         """)
     # TODO: more examples
@@ -190,7 +190,23 @@ def test_whole_row_header():
         """)
 
 def test_whole_row_middle_th():
-    pass
+    assert reflow_test("""
+        <table>
+            <tr><th>colA</th><th>colB</th></tr>
+            <tr><td>1.1</td><td>1.2</td></tr>
+            <tr><th colspan="2">row2title</th></tr>
+            <tr><td>2.1</td><td>2.2</td></tr>
+        </table>
+        """) == h("""
+        <table>
+            <colgroup>
+                <col title="colA"/>
+                <col title="colB"/>
+            </colgroup>
+            <tr><td column="colA">1.1</td><td column="colB">1.2</td></tr>
+            <tr title="row2title"><td column="colA" row="row2title">2.1</td><td column="colB" row="row2title">2.2</td></tr>
+        </table>
+        """)
 
 def test_whole_row_td():
     assert reflow_test("""

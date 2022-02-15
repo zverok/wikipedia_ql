@@ -17,6 +17,7 @@ def reflow(source_table, *, force_row_headers=None):
 
     row_title_size = 0
     prev_row = None
+    row_title_prefix = None
 
     for row_num, row in enumerate(table.select('tr')):
         cells = []
@@ -30,6 +31,11 @@ def reflow(source_table, *, force_row_headers=None):
             if row_num == 0 and row_cells[0].name == 'th':
                 # Extract table header
                 table['title'] = row_cells[0].text
+                row.extract()
+                continue
+            elif row_cells[0].name == 'th':
+                # Consider full-row th in the middle as a prefix to next rows title
+                row_title_prefix = row_cells[0].get_text(" ", strip=True)
                 row.extract()
                 continue
             elif prev_row and row_cells[0].name == 'td':
@@ -84,7 +90,7 @@ def reflow(source_table, *, force_row_headers=None):
             row.extract()
         else:
             look_for_columns = False
-            row_title = None
+            row_title = row_title_prefix
             look_for_title = not force_row_headers
             real_cells = []
             if not columns:
