@@ -4,8 +4,13 @@ Changelog
 master - unreleased
 -------------------
 
+0.0.6 - 2022-02-16
+------------------
+
 - (internal) restructure custom WikipediaQL selectors internally into having "attrs" and "functions" (CSS pseudo-selectors), paving the way for more consistency;
 - add ``sentence:first`` and ``section:first`` functions;
+- improve default YAML output formatting;
+- improve ``table-data`` quasi-selector behavior to handle mid-table full-row ``th`` (it gets attached as a prefix to subsequent rows).
 
 0.0.5 - 2022-01-26
 ------------------

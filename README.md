@@ -274,7 +274,6 @@ from <source> {
 
 ## Roadmap
 
-* **0.0.6** `infobox` and related selectors
 * **0.0.7** more Wikipedia API support (page metadata, page lists etc.)
 * **0.1.0** efficiency & robustness of existing features
 * **0.2.0** documentation and principal portability to other languages
