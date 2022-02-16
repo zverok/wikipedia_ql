@@ -42,7 +42,7 @@ cast:
 
 setuptools.setup(
     name="wikipedia_ql",
-    version="0.0.5",
+    version="0.0.6",
     author="Victor Shepelev",
     author_email="zverok.offline@gmail.com",
     description="Query Language for Wikipedia",

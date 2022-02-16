@@ -209,6 +209,7 @@ from <source> {
     * _Note again, that `selector nested_selector` is **not** supported, so you need to `li >> a` to say "all links inside the list items"_
   * [ ] `section`
     * [x] `section[heading="Section heading"]`: fetch everything inside section with the specified heading (full heading text must match);
+    * [x] `section:first` (useful to fetch article intro)
     * [ ] `section`: all sections;
     * [ ] `section[level=3]`: all sections of particular level
     * [ ] more powerful `heading` value patterns would be supported (probably in CSS-alike manner: `heading^="Starts from"` and so on)
@@ -223,7 +224,8 @@ from <source> {
   * [ ] `sentence`
     * [x] `sentence:contains("pattern")`: find sentence where pattern matches (whole sentence is selected)
     * [x] `sentence`: all sentences in the scope
-    * [ ] `sentence:first` and other CSS pseudo-selectors should work
+    * [x] `sentence:first`
+    * [ ] other CSS pseudo-selectors for `sentence`
     * [ ] pattern flags (same as for text)
     * [ ] _more suitable sentence tokenizer will be used, probably: currently we are relying on nltk, which is too powerful (and large dependency) for our simplistic needs_
   * [x] `page`: refers (from any scope) to the entire current page; useful for re-nesting fetched data in a logical way and to include metadata attributes in output (see below)
@@ -236,7 +238,7 @@ from <source> {
         * [ ] smart fetching metadata
       * [x] as a free-standing selector (`@title` on the top level to fetch "current page's title" instead of `page@title`, and so on)
   * [x] `table-data` for data tables: `from "Kharkiv" { section[heading="Climate"] >> table >> table-data >> tr[title^="Average high"] >> td[column="Jan"] }`; see [docs](https://github.com/zverok/wikipedia_ql/blob/main/docs/Tables.md)
-  * [ ] `infobox` and `infobox-*`: logical selectors for data from infoboxes (formalized data at the top right corner), something like `from "City name" { infobox >> infobox-value[field="Population"] }`
+  * [x] _infoboxes_ are covered with the same `table-data` quasi-selector, see [showcase](https://github.com/zverok/wikipedia_ql/blob/main/docs/showcase/Infoboxes.md)
   * [ ] `hatnote` to fetch and process [Hatnotes](https://en.wikipedia.org/wiki/Wikipedia:Hatnote) (special links at the top of the page/section, saying "for more information, see [here]", "this page is about X, if you want Y, go [there]" and so on)
   * [ ] `:has`: like [CSS `:has` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:has) but support all the WikipediaQL selectors, so one might say `from category:"Marvel Cinematic Universe films" { :has(@category*="films") { ...work with pages... } }` to drop from the result-set pages of the [category](https://en.wikipedia.org/wiki/Category:Marvel_Cinematic_Universe_films) which aren't movies.
   * [ ] (?) `:primary` or something like that (maybe `:largest`), to select the most important thing in the scope (for example, `section[heading="Discography"] >> ul:primary` will probably fetch the list of albums, while the section might have other, smaller lists, like the enumeration of studios where recordings were done)
@@ -272,7 +274,6 @@ from <source> {
 
 ## Roadmap
 
-* **0.0.6** `infobox` and related selectors
 * **0.0.7** more Wikipedia API support (page metadata, page lists etc.)
 * **0.1.0** efficiency & robustness of existing features
 * **0.2.0** documentation and principal portability to other languages

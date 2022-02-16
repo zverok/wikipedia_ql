@@ -36,7 +36,7 @@ def run():
     print()
 
     if options.output_format == 'yaml':
-      print(yaml.safe_dump(result, allow_unicode=True))
+      print(yaml.safe_dump(result, allow_unicode=True, width=1000, default_style='>'))
     elif options.output_format == 'json':
       print(json.dumps(result, ensure_ascii=False))
     else:
